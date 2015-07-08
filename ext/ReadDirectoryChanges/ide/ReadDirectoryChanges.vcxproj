@@ -45,9 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)\..\bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)\..\build\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)\..\bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)\..\build\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -79,20 +83,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
+    <None Include="..\ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ReadDirectoryChangesPrivate.h" />
-    <ClInclude Include="ReadDirectoryChanges.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="ThreadSafeQueue.h" />
+    <ClInclude Include="..\src\ReadDirectoryChangesPrivate.h" />
+    <ClInclude Include="..\src\ReadDirectoryChanges.h" />
+    <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="..\src\targetver.h" />
+    <ClInclude Include="..\src\ThreadSafeQueue.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="ReadDirectoryChangesPrivate.cpp" />
-    <ClCompile Include="ReadDirectoryChanges.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="..\src\Main.cpp" />
+    <ClCompile Include="..\src\ReadDirectoryChangesPrivate.cpp" />
+    <ClCompile Include="..\src\ReadDirectoryChanges.cpp" />
+    <ClCompile Include="..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
