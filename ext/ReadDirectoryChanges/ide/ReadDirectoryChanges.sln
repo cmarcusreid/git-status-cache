@@ -1,7 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReadDirectoryChanges", "ReadDirectoryChanges.vcxproj", "{72A7916C-36BC-49D6-A9A9-B9FF8347BCE6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReadDirectoryChangesLib", "ReadDirectoryChangesLib.vcxproj", "{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +17,10 @@ Global
 		{72A7916C-36BC-49D6-A9A9-B9FF8347BCE6}.Debug|Win32.Build.0 = Debug|Win32
 		{72A7916C-36BC-49D6-A9A9-B9FF8347BCE6}.Release|Win32.ActiveCfg = Release|Win32
 		{72A7916C-36BC-49D6-A9A9-B9FF8347BCE6}.Release|Win32.Build.0 = Release|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Debug|Win32.Build.0 = Debug|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Release|Win32.ActiveCfg = Release|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

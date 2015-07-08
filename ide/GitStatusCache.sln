@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GitStatusCache", "..\src\GitStatusCache\ide\GitStatusCache.vcxproj", "{2BB7912E-5C54-4247-AFC7-EBD2026418E5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReadDirectoryChangesLib", "..\ext\ReadDirectoryChanges\ide\ReadDirectoryChangesLib.vcxproj", "{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -15,6 +17,10 @@ Global
 		{2BB7912E-5C54-4247-AFC7-EBD2026418E5}.Debug|Win32.Build.0 = Debug|Win32
 		{2BB7912E-5C54-4247-AFC7-EBD2026418E5}.Release|Win32.ActiveCfg = Release|Win32
 		{2BB7912E-5C54-4247-AFC7-EBD2026418E5}.Release|Win32.Build.0 = Release|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Debug|Win32.Build.0 = Debug|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Release|Win32.ActiveCfg = Release|Win32
+		{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

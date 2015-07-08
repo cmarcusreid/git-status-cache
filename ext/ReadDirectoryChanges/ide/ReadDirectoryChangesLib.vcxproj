@@ -11,13 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{72A7916C-36BC-49D6-A9A9-B9FF8347BCE6}</ProjectGuid>
+    <ProjectGuid>{A14F8B89-3DBC-4DA9-A7D7-95070AB4DCF6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ReadDirectoryChanges</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -25,7 +25,7 @@
     <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
@@ -85,9 +85,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\src\ReadDirectoryChangesPrivate.h" />
     <ClInclude Include="..\inc\ReadDirectoryChanges.h" />
     <ClInclude Include="..\src\stdafx.h" />
@@ -95,7 +92,6 @@
     <ClInclude Include="..\inc\ThreadSafeQueue.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Main.cpp" />
     <ClCompile Include="..\src\ReadDirectoryChangesPrivate.cpp" />
     <ClCompile Include="..\src\ReadDirectoryChanges.cpp" />
     <ClCompile Include="..\src\stdafx.cpp">
