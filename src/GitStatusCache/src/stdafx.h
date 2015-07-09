@@ -9,5 +9,16 @@
 
 #include <stdio.h>
 #include <tchar.h>
+#include <windows.h>
+#include <atlstr.h>
+
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
 
 #include <boost/core/noncopyable.hpp>
+
+#include "Logging.h"
+using namespace Logging;

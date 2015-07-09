@@ -87,6 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\DirectoryMonitor.h" />
     <ClInclude Include="..\src\LoggingModuleSettings.h" />
     <ClInclude Include="..\src\LoggingInitializationScope.h" />
     <ClInclude Include="..\src\LoggingModule.h" />
@@ -97,6 +98,7 @@
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\DirectoryMonitor.cpp" />
     <ClCompile Include="..\src\LoggingModule.cpp" />
     <ClCompile Include="..\src\LogStream.cpp" />
     <ClCompile Include="..\src\GitStatusCache.cpp" />

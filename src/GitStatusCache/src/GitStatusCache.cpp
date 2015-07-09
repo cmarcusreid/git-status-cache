@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include <boost/program_options.hpp>
-#include "Logging.h"
+#include "DirectoryMonitor.h"
 #include "LoggingModuleSettings.h"
 #include "LoggingInitializationScope.h"
 
@@ -37,6 +37,14 @@ void ThrowIfMutuallyExclusiveOptionsSet(
 	{
 		throw std::logic_error(std::string("Options '") + option1 + "', '" + option2 + "', and '" + option3 + "' are mutually exclusive.");
 	}
+}
+
+void WaitForEnter()
+{
+#pragma push_macro("max")
+#undef max
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+#pragma pop_macro("max")
 }
 
 int wmain(int argc, wchar_t* argv[])
@@ -85,11 +93,16 @@ int wmain(int argc, wchar_t* argv[])
 		loggingSettings.MinimumSeverity = Logging::Severity::Info;
 
 	Logging::LoggingInitializationScope enableLogging(loggingSettings);
-	Logging::Log("MyFirst.Event", Logging::Severity::Critical) << "Hello world!";
-	Logging::Log("2nd.Event", Logging::Severity::Error) << "Hello world!";
-	Logging::Log("Third.Event", Logging::Severity::Warning) << "Hello world!";
-	Logging::Log("4th.Event", Logging::Severity::Info) << "Hello world!";
-	Logging::Log("5th.Event", Logging::Severity::Verbose) << "Hello world!";
-	Logging::Log("6th.Event", Logging::Severity::Spam) << "Hello world!";
+
+	DirectoryMonitor directoryMonitor(
+		[](const std::wstring&, DirectoryMonitor::FileAction)
+		{
+		},
+		[]()
+		{
+		});
+	directoryMonitor.AddDirectory(L"D:\\git-status-cache\\");
+
+	WaitForEnter();
 	return 0;
 }

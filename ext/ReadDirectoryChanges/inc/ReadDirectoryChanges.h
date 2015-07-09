@@ -31,7 +31,7 @@
 
 #include "ThreadSafeQueue.h"
 
-typedef pair<DWORD,CStringW> TDirectoryChangeNotification;
+typedef std::pair<DWORD,CStringW> TDirectoryChangeNotification;
 
 namespace ReadDirectoryChangesPrivate
 {
@@ -122,6 +122,8 @@ public:
 	HANDLE GetWaitHandle() { return m_Notifications.GetWaitHandle(); }
 
 	bool Pop(DWORD& dwAction, CStringW& wstrFilename);
+
+	bool Pop(DWORD& dwAction, std::wstring& wstrFilename);
 
 	// "Push" is for usage by ReadChangesRequest.  Not intended for external usage.
 	void Push(DWORD dwAction, CStringW& wstrFilename);

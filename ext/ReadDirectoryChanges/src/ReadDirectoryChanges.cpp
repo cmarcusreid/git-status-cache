@@ -103,6 +103,18 @@ bool  CReadDirectoryChanges::Pop(DWORD& dwAction, CStringW& wstrFilename)
 	return true;
 }
 
+bool  CReadDirectoryChanges::Pop(DWORD& dwAction, std::wstring& wstrFilename)
+{
+	CStringW filename;
+	if (this->Pop(dwAction, filename))
+	{
+		wstrFilename = std::wstring(filename);
+		return true;
+	}
+
+	return false;
+}
+
 bool CReadDirectoryChanges::CheckOverflow()
 {
 	bool b = m_Notifications.overflow();

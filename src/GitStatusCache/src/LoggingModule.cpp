@@ -68,6 +68,7 @@ namespace Logging
 			{
 				tempPath.append("GitStatusCache_%Y-%m-%d_%H-%M-%S.%N.log");
 				auto fileSink = add_file_log(
+					keywords::auto_flush = true,
 					keywords::file_name = tempPath.c_str(),
 					keywords::rotation_size = 10 * 1024 * 1024,
 					keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0));
