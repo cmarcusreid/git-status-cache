@@ -62,7 +62,7 @@ CReadChangesRequest::CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz
 CReadChangesRequest::~CReadChangesRequest()
 {
 	// RequestTermination() must have been called successfully.
-	_ASSERTE(m_hDirectory == NULL);
+	_ASSERTE(m_hDirectory == NULL || m_hDirectory == INVALID_HANDLE_VALUE);
 }
 
 
