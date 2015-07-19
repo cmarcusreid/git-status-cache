@@ -3,6 +3,7 @@
 #include "DirectoryMonitor.h"
 #include "LoggingModuleSettings.h"
 #include "LoggingInitializationScope.h"
+#include "NamedPipeServer.h"
 
 using namespace boost::program_options;
 
@@ -94,14 +95,10 @@ int wmain(int argc, wchar_t* argv[])
 
 	Logging::LoggingInitializationScope enableLogging(loggingSettings);
 
-	DirectoryMonitor directoryMonitor(
-		[](const std::wstring&, DirectoryMonitor::FileAction)
-		{
-		},
-		[]()
-		{
-		});
+	DirectoryMonitor directoryMonitor([](const std::wstring&, DirectoryMonitor::FileAction) { }, []() { });
 	directoryMonitor.AddDirectory(L"D:\\git-status-cache\\");
+
+	NamedPipeServer server([](const std::wstring&) { return std::wstring(L"Test response."); });
 
 	WaitForEnter();
 	return 0;

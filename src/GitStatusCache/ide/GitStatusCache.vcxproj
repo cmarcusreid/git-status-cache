@@ -94,6 +94,8 @@
     <ClInclude Include="..\src\LogStream.h" />
     <ClInclude Include="..\src\Logging.h" />
     <ClInclude Include="..\src\LoggingSeverities.h" />
+    <ClInclude Include="..\src\NamedPipeInstance.h" />
+    <ClInclude Include="..\src\NamedPipeServer.h" />
     <ClInclude Include="..\src\stdafx.h" />
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>
@@ -102,6 +104,8 @@
     <ClCompile Include="..\src\LoggingModule.cpp" />
     <ClCompile Include="..\src\LogStream.cpp" />
     <ClCompile Include="..\src\GitStatusCache.cpp" />
+    <ClCompile Include="..\src\NamedPipeInstance.cpp" />
+    <ClCompile Include="..\src\NamedPipeServer.cpp" />
     <ClCompile Include="..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

@@ -12,11 +12,13 @@
 #include <windows.h>
 #include <atlstr.h>
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include <boost/core/noncopyable.hpp>
 
