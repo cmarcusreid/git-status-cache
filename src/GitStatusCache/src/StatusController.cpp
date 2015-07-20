@@ -79,4 +79,6 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 	responseTree.put(L"Modified", 2);
 	responseTree.put(L"Deleted", 6);
 	return WriteJson(responseTree);
+
+	return request;
 }

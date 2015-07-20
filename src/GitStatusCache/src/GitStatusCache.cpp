@@ -16,10 +16,11 @@ options_description BuildGenericOptions()
 	return generic;
 }
 
-options_description BuildLoggingOptions(bool* enableFileLogging, bool* quiet, bool* verbose, bool* spam)
+options_description BuildLoggingOptions(bool* enableFileLogging, bool* enableConsoleLogging, bool* quiet, bool* verbose, bool* spam)
 {
 	options_description logging{ "Logging options" };
 	logging.add_options()
+		("consoleLogging", bool_switch(enableConsoleLogging), "Enables console logging.")
 		("fileLogging", bool_switch(enableFileLogging), "Enables file logging.")
 		("quiet,q", bool_switch(quiet), "Disables all non-critical logging output.")
 		("verbose,v", bool_switch(verbose), "Enables verbose logging output.")
@@ -57,7 +58,7 @@ int wmain(int argc, wchar_t* argv[])
 	bool spam = false;
 
 	auto generic = BuildGenericOptions();
-	auto logging = BuildLoggingOptions(&loggingSettings.EnableFileLogging, &quiet, &verbose, &spam);
+	auto logging = BuildLoggingOptions(&loggingSettings.EnableFileLogging, &loggingSettings.EnableConsoleLogging, &quiet, &verbose, &spam);
 	options_description all{ "Allowed options" };
 	all.add(generic).add(logging);
 
@@ -84,7 +85,6 @@ int wmain(int argc, wchar_t* argv[])
 		return -1;
 	}
 
-	loggingSettings.EnableConsoleLogging = true;
 	if (quiet)
 		loggingSettings.MinimumSeverity = Logging::Severity::Error;
 	else if (verbose)
