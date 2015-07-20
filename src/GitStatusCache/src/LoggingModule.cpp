@@ -4,6 +4,7 @@
 #include <boost/log/attributes.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/log/expressions/formatters/char_decorator.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/support/date_time.hpp> 
 #include <boost/log/utility/setup/common_attributes.hpp>
@@ -41,7 +42,14 @@ namespace Logging
 		auto threadId = expressions::attr<attributes::current_thread_id::value_type>("ThreadID");
 		auto eventId = expressions::attr<std::string>("EventId");
 		auto severity = expressions::attr<Logging::Severity>("Severity");
-		auto message = expressions::message;
+
+		std::pair<const char*, const char*> charactersToEscape[3] =
+		{
+			std::pair<const char*, const char*>{ "\r", "\\r" },
+			std::pair<const char*, const char*>{ "\n", "\\n" },
+			std::pair<const char*, const char*>{ "\t", "\\t" }
+		};
+		auto message = expressions::char_decor(charactersToEscape)[expressions::stream << expressions::message];
 
 		auto formatter = expressions::stream
 			<< timestamp << "\t"

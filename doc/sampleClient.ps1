@@ -2,7 +2,7 @@ $pipe = new-object System.IO.Pipes.NamedPipeClientStream '.','GitStatusCache','I
 $pipe.Connect(50)
 $pipe.ReadMode = 'Message'
 
-$request = $PSScriptRoot
+$request = New-Object psobject -Property @{ Version = 1; Path = $PSScriptRoot } | ConvertTo-Json -Compress
 $encoding = [System.Text.Encoding]::Unicode
 $requestBuffer = $encoding.GetBytes($request)
 $pipe.Write($requestBuffer, 0, $requestBuffer.Length)
