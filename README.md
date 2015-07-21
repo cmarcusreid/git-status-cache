@@ -1,10 +1,23 @@
-## git-status-cache ##
+# git-status-cache #
+
+High performance cache for git repository status. Clients can retrieve information via named pipe.
+
+## TODO ##
 
 **This project is a work-in-progress and is not currently functional.** 
 
-### Build ###
+Major remaining work before initial end-to-end flow is available:
+
+- Retrieve repository information using libgit2.
+- Cache repository data by path.
+- Update cache in response to queries.
+- Update cache in response to file system changes.
+
+## Build ##
 
 Build through Visual Studio using the [solution](ide/GitStatusCache.sln) after configuring required dependencies. 
+
+### Build dependencies ###
 
 #### CMake ####
 
@@ -25,7 +38,7 @@ libgit2 is included as a submodule. To pull locally:
 
 	git submodule update --init --recursive
 
-CMake is required to build. See libgit2 [build instructions](https://libgit2.github.com/docs/guides/build-and-link/ "build instructions") for details. Use the following options to generate Visual studio project and perform initial build: 
+CMake is required to build. See libgit2 [build instructions](https://libgit2.github.com/docs/guides/build-and-link/ "build instructions") for details. Use the following options to generate Visual Studio project and perform initial build: 
 
 	cd .\ext\libgit2
 	mkdir build
