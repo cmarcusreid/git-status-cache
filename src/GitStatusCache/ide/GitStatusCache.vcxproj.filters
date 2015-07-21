@@ -42,16 +42,19 @@
     <ClInclude Include="..\src\DirectoryMonitor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Git.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\NamedPipeServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\NamedPipeInstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\StatusController.h">
+    <ClInclude Include="..\src\SmartPointers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SmartPointers.h">
+    <ClInclude Include="..\src\StatusController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -78,6 +81,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\StatusController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Git.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

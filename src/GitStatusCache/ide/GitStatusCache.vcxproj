@@ -89,6 +89,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Git.h" />
     <ClInclude Include="..\src\SmartPointers.h" />
     <ClInclude Include="..\src\StatusController.h" />
     <ClInclude Include="..\src\DirectoryMonitor.h" />
@@ -105,6 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\DirectoryMonitor.cpp" />
+    <ClCompile Include="..\src\Git.cpp" />
     <ClCompile Include="..\src\LoggingModule.cpp" />
     <ClCompile Include="..\src\LogStream.cpp" />
     <ClCompile Include="..\src\GitStatusCache.cpp" />

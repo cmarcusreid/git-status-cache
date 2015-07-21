@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Git.h"
 #include <boost/property_tree/ptree.hpp>
 
 class StatusController : boost::noncopyable
 {
 private:
+	Git m_git;
+
 	boost::property_tree::wptree CreateResponseTree();
 	std::wstring WriteJson(const boost::property_tree::wptree& tree);
 

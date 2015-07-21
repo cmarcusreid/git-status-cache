@@ -73,8 +73,11 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 		return CreateErrorResponse(request, L"'Path' must be specified.");
 	}
 
+	auto repositoryPath = m_git.DiscoverRepository(path.get());
+
 	auto responseTree = CreateResponseTree();
 	responseTree.put(L"Path", path.get());
+	responseTree.put(L"RepoPath", repositoryPath);
 	responseTree.put(L"Added", 6);
 	responseTree.put(L"Modified", 2);
 	responseTree.put(L"Deleted", 6);
