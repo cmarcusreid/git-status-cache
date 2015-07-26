@@ -1,3 +1,9 @@
+if ($Global:GitStatusCacheClientPipe -ne $null -and -not $Global:GitStatusCacheClientPipe.IsConnected)
+{
+	$Global:GitStatusCacheClientPipe.Dispose()
+	$Global:GitStatusCacheClientPipe = $null
+}
+
 if ($Global:GitStatusCacheClientPipe -eq $null)
 {
 	$Global:GitStatusCacheClientPipe = new-object System.IO.Pipes.NamedPipeClientStream '.','GitStatusCache','InOut','WriteThrough'

@@ -7,13 +7,24 @@
 #include <locale>
 #include <string>
 
-/*static*/ std::string Git::ConvertToUtf8(const std::wstring& unicodeString)
+void DeleteGitBuf(git_buf& buffer)
+{
+	git_buf_free(&buffer);
+}
+
+using UniqueGitBuf = std::experimental::unique_resource_t<git_buf, decltype(&DeleteGitBuf)>;
+UniqueGitBuf MakeUniqueGitBuf(git_buf&& buffer)
+{
+	return std::experimental::unique_resource(std::move(buffer), &DeleteGitBuf);
+}
+
+std::string ConvertToUtf8(const std::wstring& unicodeString)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.to_bytes(unicodeString);
 }
 
-/*static*/ std::wstring Git::ConvertToUnicode(const std::string& utf8String)
+std::wstring ConvertToUnicode(const std::string& utf8String)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.from_bytes(utf8String);
@@ -31,9 +42,9 @@ Git::~Git()
 
 std::wstring Git::DiscoverRepository(const std::wstring& path)
 {
-	git_buf repositoryPath = { 0 };
+	auto repositoryPath = MakeUniqueGitBuf(git_buf{ 0 });
 	auto result = git_repository_discover(
-		&repositoryPath,
+		&repositoryPath.get(),
 		ConvertToUtf8(path).c_str(),
 		true /*across_fs*/,
 		nullptr /*ceiling_dirs*/);
@@ -41,9 +52,8 @@ std::wstring Git::DiscoverRepository(const std::wstring& path)
 	std::wstring unicodeRepositoryPath;
 	if (result == GIT_OK)
 	{
-		unicodeRepositoryPath = ConvertToUnicode(std::string(repositoryPath.ptr, repositoryPath.size));
+		unicodeRepositoryPath = ConvertToUnicode(std::string(repositoryPath.get().ptr, repositoryPath.get().size));
 	}
 
-	git_buf_free(&repositoryPath);
 	return unicodeRepositoryPath;
 }

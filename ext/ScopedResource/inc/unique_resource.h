@@ -74,7 +74,7 @@ public:
 	}
 
 	// resource access
-	R const & get() const noexcept
+	R& get() noexcept
 	{
 		return resource;
 	}
