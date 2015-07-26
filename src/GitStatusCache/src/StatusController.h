@@ -8,10 +8,12 @@ class StatusController : boost::noncopyable
 private:
 	Git m_git;
 
-	boost::property_tree::wptree CreateResponseTree();
-	std::wstring WriteJson(const boost::property_tree::wptree& tree);
+	static boost::property_tree::wptree CreateResponseTree();
+	static void AddArrayToResponseTree(boost::property_tree::wptree& tree, std::wstring&& name, const std::vector<std::wstring>& values);
+	static void AddArrayToResponseTree(boost::property_tree::wptree& tree, std::wstring&& name, const std::vector<std::pair<std::wstring, std::wstring>>& values);
+	static std::wstring WriteJson(const boost::property_tree::wptree& tree);
 
-	std::wstring CreateErrorResponse(const std::wstring& request, std::wstring&& error);
+	static std::wstring CreateErrorResponse(const std::wstring& request, std::wstring&& error);
 
 public:
 	StatusController();
