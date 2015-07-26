@@ -108,7 +108,7 @@ unique_resource_t<R, D> unique_resource(R && r, D t) noexcept
 	return unique_resource_t<R, D>(std::move(r), std::move(t), true);
 }
 
-	template<typename R, typename D>
+template<typename R, typename D>
 unique_resource_t<R, D> unique_resource_checked(R r, R invalid, D t) noexcept
 {
 	bool shouldrun = (r != invalid);

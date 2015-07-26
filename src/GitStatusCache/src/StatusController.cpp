@@ -75,9 +75,16 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 
 	auto repositoryPath = m_git.DiscoverRepository(path.get());
 
+	std::wstring currentBranch;
+	if (!repositoryPath.empty())
+	{
+		currentBranch = m_git.GetCurrentBranch(repositoryPath);
+	}
+
 	auto responseTree = CreateResponseTree();
 	responseTree.put(L"Path", path.get());
 	responseTree.put(L"RepoPath", repositoryPath);
+	responseTree.put(L"Branch", currentBranch);
 	responseTree.put(L"Added", 6);
 	responseTree.put(L"Modified", 2);
 	responseTree.put(L"Deleted", 6);

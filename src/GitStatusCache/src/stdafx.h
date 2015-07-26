@@ -13,6 +13,8 @@
 #include <atlstr.h>
 
 #include <algorithm>
+#include <codecvt>
+#include <locale>
 #include <limits>
 #include <memory>
 #include <mutex>
