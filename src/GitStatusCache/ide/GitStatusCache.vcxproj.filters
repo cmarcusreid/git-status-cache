@@ -51,6 +51,9 @@
     <ClInclude Include="..\src\StatusController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SmartPointers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\LoggingModule.cpp">

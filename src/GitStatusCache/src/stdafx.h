@@ -20,7 +20,19 @@
 #include <thread>
 #include <vector>
 
+#ifndef noexcept
+#define noexcept throw()
+#include <scope_guard.h>
+#include <unique_resource.h>
+#undef noexcept
+#else
+#include <scope_guard.h>
+#include <unique_resource.h>
+#endif
+
 #include <boost/core/noncopyable.hpp>
 
 #include "Logging.h"
 using namespace Logging;
+
+#include "SmartPointers.h"

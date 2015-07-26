@@ -30,10 +30,8 @@ void NamedPipeInstance::OnClientRequest()
 
 	::FlushFileBuffers(m_pipe);
 	::DisconnectNamedPipe(m_pipe);
-	::CloseHandle(m_pipe);
-
+	m_pipe.invoke();
 	m_isClosed = true;
-	m_pipe = INVALID_HANDLE_VALUE;
 
 	Log("NamedPipeInstance.OnClientRequest.Stop", Severity::Verbose) << "Request servicing thread stopping.";
 }
@@ -113,6 +111,7 @@ NamedPipeInstance::IoResult NamedPipeInstance::WriteResponse(const std::wstring&
 
 NamedPipeInstance::NamedPipeInstance(const OnClientRequestCallback& onClientRequestCallback)
 	: m_onClientRequestCallback(onClientRequestCallback)
+	, m_pipe(MakeUniqueHandle(INVALID_HANDLE_VALUE))
 {
 	auto pipeMode = PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT;
 	auto timeout = 0;
@@ -131,7 +130,7 @@ NamedPipeInstance::NamedPipeInstance(const OnClientRequestCallback& onClientRequ
 		Log("NamedPipeInstance.Create", Severity::Error) << "Failed to create named pipe instance.";
 		throw std::runtime_error("Failed to create named pipe instance.");
 	}
-	m_pipe = pipe;
+	m_pipe = MakeUniqueHandle(pipe);
 }
 
 NamedPipeInstance::~NamedPipeInstance()
@@ -145,11 +144,6 @@ NamedPipeInstance::~NamedPipeInstance()
 			::CancelSynchronousIo(m_thread.native_handle());
 		}
 		m_thread.join();
-	}
-
-	if (m_pipe != INVALID_HANDLE_VALUE)
-	{
-		::CloseHandle(m_pipe);
 	}
 }
 

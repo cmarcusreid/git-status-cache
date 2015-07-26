@@ -20,7 +20,7 @@ private:
 	const size_t BufferSize = 4096;
 
 	bool m_isClosed = false;
-	HANDLE m_pipe = INVALID_HANDLE_VALUE;
+	UniqueHandle m_pipe;
 	std::thread m_thread;
 	std::once_flag m_flag;
 	OnClientRequestCallback m_onClientRequestCallback;
