@@ -8,10 +8,13 @@ High performance cache for git repository status. Clients can retrieve informati
 
 Major remaining work before initial end-to-end flow is available:
 
-- Retrieve repository information using libgit2.
 - Cache repository data by path.
 - Update cache in response to queries.
 - Update cache in response to file system changes.
+
+## Clients ##
+
+- PowerShell: [git-status-cache-posh-client](https://github.com/cmarcusreid/git-status-cache-posh-client)
 
 ## Build ##
 
