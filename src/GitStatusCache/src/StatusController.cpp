@@ -98,22 +98,24 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 		return CreateErrorResponse(request, L"'Path' must be specified.");
 	}
 
-	auto repositoryPath = m_git.DiscoverRepository(path.get());
-	if (!std::get<0>(repositoryPath))
+	auto status = m_git.GetStatus(path.get());
+	if (!std::get<0>(status))
 	{
-		return CreateErrorResponse(request, L"'Path' is not part of a git repository.");
+		return CreateErrorResponse(request, L"Requested 'Path' is not part of a git repository.");
 	}
+
+	auto& statusToReport = std::get<1>(status);
 
 	auto responseTree = CreateResponseTree();
 	responseTree.put(L"Path", path.get());
-	responseTree.put(L"RepoPath", std::get<1>(repositoryPath));
 
-	auto currentBranch = m_git.GetCurrentBranch(std::get<1>(repositoryPath));
-	responseTree.put(L"Branch", std::get<0>(currentBranch) ? std::get<1>(currentBranch) : std::wstring());
+	responseTree.put(L"RepoPath", statusToReport.RepositoryPath);
+	responseTree.put(L"State", statusToReport.State);
 
-	auto status = m_git.GetStatus(std::get<1>(repositoryPath));
-	Git::Status emptyStatus;
-	const auto& statusToReport = std::get<0>(status) ? std::get<1>(status) : emptyStatus;
+	responseTree.put(L"Branch", statusToReport.Branch);
+	responseTree.put(L"Upstream", statusToReport.Upstream);
+	responseTree.put(L"AheadBy", statusToReport.AheadBy);
+	responseTree.put(L"BehindBy", statusToReport.BehindBy);
 
 	AddArrayToResponseTree(responseTree, L"IndexAdded", statusToReport.IndexAdded);
 	AddArrayToResponseTree(responseTree, L"IndexModified", statusToReport.IndexModified);

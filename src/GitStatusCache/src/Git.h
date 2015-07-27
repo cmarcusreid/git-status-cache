@@ -1,5 +1,6 @@
 #pragma once
 
+
 /**
  * Performs git operations.
  */
@@ -8,6 +9,14 @@ class Git
 public:
 	struct Status
 	{
+		std::wstring RepositoryPath;
+		std::wstring State;
+
+		std::wstring Branch;
+		std::wstring Upstream;
+		int AheadBy = 0;
+		int BehindBy = 0;
+
 		std::vector<std::wstring> IndexAdded;
 		std::vector<std::wstring> IndexModified;
 		std::vector<std::wstring> IndexDeleted;
@@ -25,22 +34,34 @@ public:
 		std::vector<std::wstring> Conflicted;
 	};
 
+private:
+	/**
+	* Searches for repository containing provided path and updates status.
+	*/
+	bool DiscoverRepository(Status& status, const std::wstring& path);
+
+	/**
+	 * Retrieves current repository state based on current ongoing operation
+	 * (ex. rebase, cherry pick) and updates status.
+	 */
+	bool GetRepositoryState(Status& status, UniqueGitRepository& repository);
+
+	/**
+	* Retrieves the current branch/upstream and updates status.
+	*/
+	bool GetRefStatus(Status& status, UniqueGitRepository& repository);
+
+	/**
+	 * Retrieves file add/modify/delete statistics and updates status.
+	 */
+	bool GetFileStatus(Status& status, UniqueGitRepository& repository);
+
 public:
 	Git();
 	~Git();
 
 	/**
-	 * Searches for repository containing provided path.
-	 */
-	std::tuple<bool, std::wstring> DiscoverRepository(const std::wstring& path);
-
-	/**
-	 * Retrieves the current branch.
-	 */
-	std::tuple<bool, std::wstring> GetCurrentBranch(const std::wstring& repositoryPath);
-
-	/**
 	 * Retrieves current git status.
 	 */
-	std::tuple<bool, Git::Status> GetStatus(const std::wstring& repositoryPath);
+	std::tuple<bool, Git::Status> GetStatus(const std::wstring& path);
 };
