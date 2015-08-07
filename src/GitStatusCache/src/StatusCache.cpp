@@ -23,7 +23,14 @@ void StatusCache::OnFileChanged(const boost::filesystem::path& path, DirectoryMo
 	auto repositoryPath = m_git.DiscoverRepository(pathToSearch.c_str());
 	if (std::get<0>(repositoryPath))
 	{
-		this->InvalidateCacheEntry(std::get<1>(repositoryPath));
+		auto invalidatedEntry = this->InvalidateCacheEntry(std::get<1>(repositoryPath));
+		if (invalidatedEntry)
+		{
+			Log("StatusCache.OnFileChanged.InvalidatedCacheEntry", Severity::Info)
+				<< LR"(Invalidated git status in cache for file change. { "repositoryPath": ")" << std::get<1>(repositoryPath)
+				<< LR"(", "filePath": ")" << path.c_str()
+				<< LR"(" })";
+		}
 	}
 }
 
@@ -87,8 +94,6 @@ std::tuple<bool, Git::Status> StatusCache::GetStatus(const std::wstring& reposit
 
 bool StatusCache::InvalidateCacheEntry(const std::wstring& repositoryPath)
 {
-	auto erasedEntry = false;
-
 	{
 		UpgradableLock readLock(m_cacheMutex);
 		auto cacheEntry = m_cache.find(repositoryPath);
@@ -96,17 +101,11 @@ bool StatusCache::InvalidateCacheEntry(const std::wstring& repositoryPath)
 		{
 			UpgradedLock writeLock(readLock);
 			m_cache.erase(cacheEntry);
-			erasedEntry = true;
+			return true;
 		}
 	}
 
-	if (erasedEntry)
-	{
-		Log("StatusCache.InvalidateCacheEntry.", Severity::Verbose)
-			<< LR"(Invalidated git status in cache. { "repositoryPath": ")" << repositoryPath << LR"(" })";
-	}
-
-	return erasedEntry;
+	return false;
 }
 
 void StatusCache::InvalidateAllCacheEntries()
