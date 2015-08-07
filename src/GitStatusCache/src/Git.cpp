@@ -363,6 +363,14 @@ bool Git::GetFileStatus(Git::Status& status, UniqueGitRepository& repository)
 	return true;
 }
 
+std::tuple<bool, std::wstring> Git::DiscoverRepository(const std::wstring& path)
+{
+	Git::Status status;
+	return Git::DiscoverRepository(status, path)
+		? std::make_tuple(true, std::move(status.RepositoryPath))
+		: std::make_tuple(false, std::wstring());
+}
+
 std::tuple<bool, Git::Status> Git::GetStatus(const std::wstring& path)
 {
 	Git::Status status;

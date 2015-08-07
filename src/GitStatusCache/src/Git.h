@@ -61,6 +61,11 @@ public:
 	~Git();
 
 	/**
+	* Searches for repository containing provided path and updates status.
+	*/
+	std::tuple<bool, std::wstring> DiscoverRepository(const std::wstring& path);
+
+	/**
 	 * Retrieves current git status.
 	 */
 	std::tuple<bool, Git::Status> GetStatus(const std::wstring& path);
