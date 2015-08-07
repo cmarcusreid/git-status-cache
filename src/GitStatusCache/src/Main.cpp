@@ -4,6 +4,7 @@
 #include "LoggingModuleSettings.h"
 #include "LoggingInitializationScope.h"
 #include "NamedPipeServer.h"
+#include "StatusCache.h"
 #include "StatusController.h"
 
 using namespace boost::program_options;
@@ -95,9 +96,6 @@ int wmain(int argc, wchar_t* argv[])
 		loggingSettings.MinimumSeverity = Logging::Severity::Info;
 
 	Logging::LoggingInitializationScope enableLogging(loggingSettings);
-
-	DirectoryMonitor directoryMonitor([](const std::wstring&, DirectoryMonitor::FileAction) { }, []() { });
-	directoryMonitor.AddDirectory(L"D:\\git-status-cache\\");
 
 	StatusController statusController;
 	NamedPipeServer server([&statusController](const std::wstring& request) { return statusController.GetStatus(request); });

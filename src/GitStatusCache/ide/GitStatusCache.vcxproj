@@ -91,6 +91,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\Git.h" />
     <ClInclude Include="..\src\SmartPointers.h" />
+    <ClInclude Include="..\src\StatusCache.h" />
     <ClInclude Include="..\src\StatusController.h" />
     <ClInclude Include="..\src\DirectoryMonitor.h" />
     <ClInclude Include="..\src\LoggingModuleSettings.h" />
@@ -112,6 +113,7 @@
     <ClCompile Include="..\src\Main.cpp" />
     <ClCompile Include="..\src\NamedPipeInstance.cpp" />
     <ClCompile Include="..\src\NamedPipeServer.cpp" />
+    <ClCompile Include="..\src\StatusCache.cpp" />
     <ClCompile Include="..\src\StatusController.cpp" />
     <ClCompile Include="..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

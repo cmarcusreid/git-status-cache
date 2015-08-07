@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/thread/shared_mutex.hpp>
 #include <ReadDirectoryChanges.h>
 
 /**
@@ -24,7 +25,7 @@ public:
 	/**
 	 * Callback for change notifications. Provides path and change action.
 	 */
-	using OnChangeCallback = std::function<void(const std::wstring&, FileAction)>;
+	using OnChangeCallback = std::function<void(const boost::filesystem::path&, FileAction)>;
 
 	/**
 	 * Callback for events lost notification. Notifications may be lost if changes
@@ -41,13 +42,16 @@ private:
 
 	CReadDirectoryChanges m_readDirectoryChanges;
 
+	std::unordered_set<std::wstring> m_directories;
+	boost::shared_mutex m_directoriesMutex;
+
 	void WaitForNotifications();
 
 public:
 	/**
 	 * Constructor. Callbacks will always be invoked on the same thread.
 	 * @param onChangeCallback Callback for change notification.
-	 * @param onEventsLostCallback Callback for lsot events notification.
+	 * @param onEventsLostCallback Callback for lost events notification.
 	 */
 	DirectoryMonitor(const OnChangeCallback& onChangeCallback, const OnEventsLostCallback& onEventsLostCallback);
 	~DirectoryMonitor();

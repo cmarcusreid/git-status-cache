@@ -67,7 +67,7 @@ void DirectoryMonitor::WaitForNotifications()
 				}
 
 				if (m_onChangeCallback != nullptr)
-					m_onChangeCallback(path, fileAction);
+					m_onChangeCallback(boost::filesystem::path(path), fileAction);
 			}
 		}
 	}
@@ -96,10 +96,17 @@ DirectoryMonitor::~DirectoryMonitor()
 
 void DirectoryMonitor::AddDirectory(const std::wstring& directory)
 {
+	{
+		boost::unique_lock<boost::shared_mutex> lock(m_directoriesMutex);
+		if (m_directories.find(directory) != m_directories.end())
+			return;
+		m_directories.insert(directory);
+	}
+
 	Log("DirectoryMonitor.AddDirectory", Severity::Info)
 		<< LR"(Registering directory for change notifications. { "path": ")" << directory << LR"(" })";
 
-	auto notificationFlags = 
+	auto notificationFlags =
 		FILE_NOTIFY_CHANGE_LAST_WRITE
 		| FILE_NOTIFY_CHANGE_CREATION
 		| FILE_NOTIFY_CHANGE_FILE_NAME

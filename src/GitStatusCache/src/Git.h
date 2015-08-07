@@ -10,6 +10,7 @@ public:
 	struct Status
 	{
 		std::wstring RepositoryPath;
+		std::wstring WorkingDirectory;
 		std::wstring State;
 
 		std::wstring Branch;
@@ -41,6 +42,11 @@ private:
 	bool DiscoverRepository(Status& status, const std::wstring& path);
 
 	/**
+	* Retrieves the repository's working directory and updates status.
+	*/
+	bool GetWorkingDirectory(Status& status, UniqueGitRepository& repository);
+
+	/**
 	 * Retrieves current repository state based on current ongoing operation
 	 * (ex. rebase, cherry pick) and updates status.
 	 */
@@ -66,7 +72,7 @@ public:
 	std::tuple<bool, std::wstring> DiscoverRepository(const std::wstring& path);
 
 	/**
-	 * Retrieves current git status.
+	 * Retrieves current git status for repository at provided path.
 	 */
 	std::tuple<bool, Git::Status> GetStatus(const std::wstring& path);
 };

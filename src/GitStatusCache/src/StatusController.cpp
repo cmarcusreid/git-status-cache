@@ -98,10 +98,16 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 		return CreateErrorResponse(request, L"'Path' must be specified.");
 	}
 
-	auto status = m_git.GetStatus(path.get());
-	if (!std::get<0>(status))
+	auto repositoryPath = m_git.DiscoverRepository(path.get());
+	if (!std::get<0>(repositoryPath))
 	{
 		return CreateErrorResponse(request, L"Requested 'Path' is not part of a git repository.");
+	}
+
+	auto status = m_cache.GetStatus(std::get<1>(repositoryPath));
+	if (!std::get<0>(status))
+	{
+		return CreateErrorResponse(request, L"Failed to retrieve status of git repository at provided 'Path'.");
 	}
 
 	auto& statusToReport = std::get<1>(status);
@@ -110,6 +116,7 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 	responseTree.put(L"Path", path.get());
 
 	responseTree.put(L"RepoPath", statusToReport.RepositoryPath);
+	responseTree.put(L"WorkingDir", statusToReport.WorkingDirectory);
 	responseTree.put(L"State", statusToReport.State);
 
 	responseTree.put(L"Branch", statusToReport.Branch);
@@ -134,6 +141,4 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 	AddArrayToResponseTree(responseTree, L"Conflicted", statusToReport.Conflicted);
 
 	return WriteJson(responseTree);
-
-	return request;
 }

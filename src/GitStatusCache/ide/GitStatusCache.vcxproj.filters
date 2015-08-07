@@ -57,6 +57,9 @@
     <ClInclude Include="..\src\StatusController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\StatusCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\LoggingModule.cpp">
@@ -84,6 +87,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\StatusCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
