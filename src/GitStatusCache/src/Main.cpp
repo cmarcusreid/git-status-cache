@@ -51,8 +51,11 @@ void WaitForEnter()
 #pragma pop_macro("max")
 }
 
-int wmain(int argc, wchar_t* argv[])
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
+	int argc;
+	auto argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+
 	Logging::LoggingModuleSettings loggingSettings;
 	bool quiet = false;
 	bool verbose = false;
