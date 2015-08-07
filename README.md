@@ -2,16 +2,6 @@
 
 High performance cache for git repository status. Clients can retrieve information via named pipe.
 
-## TODO ##
-
-**This project is a work-in-progress and is not currently functional.** 
-
-Major remaining work before initial end-to-end flow is available:
-
-- Cache repository data by path.
-- Update cache in response to queries.
-- Update cache in response to file system changes.
-
 ## Clients ##
 
 - PowerShell: [git-status-cache-posh-client](https://github.com/cmarcusreid/git-status-cache-posh-client)
