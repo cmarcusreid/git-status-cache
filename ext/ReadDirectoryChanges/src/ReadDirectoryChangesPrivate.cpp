@@ -41,13 +41,14 @@ namespace ReadDirectoryChangesPrivate
 ///////////////////////////////////////////////////////////////////////////
 // CReadChangesRequest
 
-CReadChangesRequest::CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, BOOL b, DWORD dw, DWORD size)
+CReadChangesRequest::CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, BOOL b, DWORD dw, DWORD size, UINT32 token)
 {
 	m_pServer		= pServer;
 	m_dwFlags		= dw;
 	m_bChildren		= b;
 	m_wstrDirectory	= sz;
 	m_hDirectory	= 0;
+	m_token			= token;
 
 	::ZeroMemory(&m_Overlapped, sizeof(OVERLAPPED));
 
@@ -170,7 +171,7 @@ void CReadChangesRequest::ProcessNotification()
 				wstrFilename = wbuf;
 		}
 
-		m_pServer->m_pBase->Push(fni.Action, wstrFilename);
+		m_pServer->m_pBase->Push(m_token, fni.Action, wstrFilename);
 
 		if (!fni.NextEntryOffset)
 			break;

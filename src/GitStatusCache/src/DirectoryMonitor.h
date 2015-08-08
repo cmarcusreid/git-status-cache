@@ -23,9 +23,14 @@ public:
 	};
 
 	/**
+	* Identifies AddDirectory call. Passed back with file change notifications.
+	*/
+	using Token = uint32_t;
+
+	/**
 	 * Callback for change notifications. Provides path and change action.
 	 */
-	using OnChangeCallback = std::function<void(const boost::filesystem::path&, FileAction)>;
+	using OnChangeCallback = std::function<void(Token, const boost::filesystem::path&, FileAction)>;
 
 	/**
 	 * Callback for events lost notification. Notifications may be lost if changes
@@ -42,7 +47,7 @@ private:
 
 	CReadDirectoryChanges m_readDirectoryChanges;
 
-	std::unordered_set<std::wstring> m_directories;
+	std::unordered_map<std::wstring, Token> m_directories;
 	boost::shared_mutex m_directoriesMutex;
 
 	void WaitForNotifications();
@@ -60,5 +65,5 @@ public:
 	 * Registers a directory for change notifications.
 	 * This method is thread-safe.
 	 */
-	void AddDirectory(const std::wstring& directory);
+	Token AddDirectory(const std::wstring& directory);
 };

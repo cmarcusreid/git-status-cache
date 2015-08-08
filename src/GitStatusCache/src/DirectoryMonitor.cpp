@@ -28,46 +28,47 @@ void DirectoryMonitor::WaitForNotifications()
 			}
 			else
 			{
+				Token token;
 				DWORD action;
 				std::wstring path;
-				m_readDirectoryChanges.Pop(action, path);
+				m_readDirectoryChanges.Pop(token, action, path);
 
 				auto fileAction = DirectoryMonitor::FileAction::Unknown;
 				switch (action)
 				{
 				default:
 					Log("DirectoryMonitor.Notification.Unknown", Severity::Warning)
-						<< LR"(Unknown notification for file. { "path": ")" << path << LR"(" })";
+						<< LR"(Unknown notification for file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
 					break;
 				case FILE_ACTION_ADDED:
 					Log("DirectoryMonitor.Notification.Add", Severity::Spam)
-						<< LR"(Added file. { "path": ")" << path << LR"(" })";
+						<< LR"(Added file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
 					fileAction = DirectoryMonitor::FileAction::Added;
 					break;
 				case FILE_ACTION_REMOVED:
 					Log("DirectoryMonitor.Notification.Remove", Severity::Spam)
-						<< LR"(Removed file. { "path": ")" << path << LR"(" })";
+						<< LR"(Removed file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
 					fileAction = DirectoryMonitor::FileAction::Removed;
 					break;
 				case FILE_ACTION_MODIFIED:
 					Log("DirectoryMonitor.Notification.Modified", Severity::Spam)
-						<< LR"(Modified file. { "path": ")" << path << LR"(" })";
+						<< LR"(Modified file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
 					fileAction = DirectoryMonitor::FileAction::Modified;
 					break;
 				case FILE_ACTION_RENAMED_OLD_NAME:
 					Log("DirectoryMonitor.Notification.RenamedFrom", Severity::Spam)
-						<< LR"(Renamed file. { "oldPath": ")" << path << LR"(" })";
+						<< LR"(Renamed file. { "token": )" << token << LR"(, "oldPath": ")" << path << LR"(" })";
 					fileAction = DirectoryMonitor::FileAction::RenamedFrom;
 					break;
 				case FILE_ACTION_RENAMED_NEW_NAME:
 					Log("DirectoryMonitor.Notification.RenamedTo", Severity::Spam)
-						<< LR"(Renamed file. { "newPath": ")" << path << LR"(" })";
+						<< LR"(Renamed file. { "token": )" << token << LR"(, "newPath": ")" << path << LR"(" })";
 					fileAction = DirectoryMonitor::FileAction::RenamedTo;
 					break;
 				}
 
 				if (m_onChangeCallback != nullptr)
-					m_onChangeCallback(boost::filesystem::path(path), fileAction);
+					m_onChangeCallback(token, boost::filesystem::path(path), fileAction);
 			}
 		}
 	}
@@ -94,17 +95,22 @@ DirectoryMonitor::~DirectoryMonitor()
 	}
 }
 
-void DirectoryMonitor::AddDirectory(const std::wstring& directory)
+DirectoryMonitor::Token DirectoryMonitor::AddDirectory(const std::wstring& directory)
 {
+	Token token;
 	{
 		boost::unique_lock<boost::shared_mutex> lock(m_directoriesMutex);
-		if (m_directories.find(directory) != m_directories.end())
-			return;
-		m_directories.insert(directory);
+		auto iterator = m_directories.find(directory);
+		if (iterator != m_directories.end())
+			return iterator->second;
+
+		static Token nextToken = 0;
+		token = nextToken++;
+		m_directories[directory] = token;
 	}
 
 	Log("DirectoryMonitor.AddDirectory", Severity::Info)
-		<< LR"(Registering directory for change notifications. { "path": ")" << directory << LR"(" })";
+		<< LR"(Registering directory for change notifications. { "token": )" << token << LR"(, "path": ")" << directory << LR"(" })";
 
 	auto notificationFlags =
 		FILE_NOTIFY_CHANGE_LAST_WRITE
@@ -112,7 +118,7 @@ void DirectoryMonitor::AddDirectory(const std::wstring& directory)
 		| FILE_NOTIFY_CHANGE_FILE_NAME
 		| FILE_NOTIFY_CHANGE_DIR_NAME
 		| FILE_NOTIFY_CHANGE_SIZE;
-	m_readDirectoryChanges.AddDirectory(directory.c_str(), true /*bWatchSubtree*/, notificationFlags);
+	m_readDirectoryChanges.AddDirectory(directory.c_str(), token, true /*bWatchSubtree*/, notificationFlags);
 
 	static std::once_flag flag;
 	std::call_once(flag, [this]()
@@ -135,4 +141,6 @@ void DirectoryMonitor::AddDirectory(const std::wstring& directory)
 
 		m_notificationThread = std::thread(&DirectoryMonitor::WaitForNotifications, this);
 	});
+
+	return token;
 }

@@ -5,7 +5,10 @@
 StatusCache::StatusCache()
 {
 	m_directoryMonitor = std::make_unique<DirectoryMonitor>(
-		[this](const boost::filesystem::path& path, DirectoryMonitor::FileAction action) { this->OnFileChanged(path, action); },
+		[this](DirectoryMonitor::Token token, const boost::filesystem::path& path, DirectoryMonitor::FileAction action)
+		{
+			this->OnFileChanged(token, path, action);
+		},
 		[this] { this->InvalidateAllCacheEntries(); });
 
 }
@@ -14,32 +17,29 @@ StatusCache::~StatusCache()
 {
 }
 
-void StatusCache::OnFileChanged(const boost::filesystem::path& path, DirectoryMonitor::FileAction action)
+void StatusCache::OnFileChanged(DirectoryMonitor::Token token, const boost::filesystem::path& path, DirectoryMonitor::FileAction action)
 {
-	auto pathToSearch = path;
-	if (path.has_filename())
+	std::wstring repositoryPath;
 	{
-		pathToSearch = path.parent_path();
-	}
-	
-	while (!boost::filesystem::exists(pathToSearch))
-	{
-		if (!pathToSearch.has_parent_path())
-			return;
-		pathToSearch = pathToSearch.parent_path();
+		ReadLock readLock(m_tokensToRepositoriesMutex);
+		auto iterator = m_tokensToRepositories.find(token);
+		if (iterator == m_tokensToRepositories.end())
+		{
+			Log("StatusCache.OnFileChanged.FailedToFindToken", Severity::Error)
+				<< LR"(Failed to find token to repository mapping. { "token": )" << token << LR"(" })";
+			throw std::logic_error("Failed to find token to repository mapping.");
+		}
+		repositoryPath = iterator->second;
 	}
 
-	auto repositoryPath = m_git.DiscoverRepository(pathToSearch.c_str());
-	if (std::get<0>(repositoryPath))
+	auto invalidatedEntry = this->InvalidateCacheEntry(repositoryPath);
+	if (invalidatedEntry)
 	{
-		auto invalidatedEntry = this->InvalidateCacheEntry(std::get<1>(repositoryPath));
-		if (invalidatedEntry)
-		{
-			Log("StatusCache.OnFileChanged.InvalidatedCacheEntry", Severity::Info)
-				<< LR"(Invalidated git status in cache for file change. { "repositoryPath": ")" << std::get<1>(repositoryPath)
-				<< LR"(", "filePath": ")" << path.c_str()
-				<< LR"(" })";
-		}
+		Log("StatusCache.OnFileChanged.InvalidatedCacheEntry", Severity::Info)
+			<< LR"(Invalidated git status in cache for file change. { "token": )" << token
+			<< LR"(, "repositoryPath": ")" << repositoryPath
+			<< LR"(", "filePath": ")" << path.c_str()
+			<< LR"(" })";
 	}
 }
 
@@ -48,7 +48,9 @@ void StatusCache::MonitorRepositoryDirectories(const Git::Status& status)
 	auto workingDirectory = status.WorkingDirectory;
 	if (!workingDirectory.empty())
 	{
-		m_directoryMonitor->AddDirectory(workingDirectory);
+		auto token = m_directoryMonitor->AddDirectory(workingDirectory);
+		WriteLock writeLock(m_tokensToRepositoriesMutex);
+		m_tokensToRepositories[token] = status.RepositoryPath;
 	}
 
 	auto repositoryPath = status.RepositoryPath;
@@ -56,7 +58,9 @@ void StatusCache::MonitorRepositoryDirectories(const Git::Status& status)
 	{
 		if (workingDirectory.empty() || repositoryPath.find(workingDirectory) != 0)
 		{
-			m_directoryMonitor->AddDirectory(repositoryPath);
+			auto token = m_directoryMonitor->AddDirectory(repositoryPath);
+			WriteLock writeLock(m_tokensToRepositoriesMutex);
+			m_tokensToRepositories[token] = status.RepositoryPath;
 		}
 	}
 }

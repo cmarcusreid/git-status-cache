@@ -22,6 +22,7 @@
 #include <atlbase.h>
 #include <atlstr.h>
 
+#include <tuple>
 #include <vector>
 #include <list>
 

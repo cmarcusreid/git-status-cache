@@ -17,13 +17,15 @@ private:
 
 	Git m_git;
 
-	std::map<std::wstring, std::tuple<bool, Git::Status>> m_cache;
+	std::unordered_map<std::wstring, std::tuple<bool, Git::Status>> m_cache;
 	boost::shared_mutex m_cacheMutex;
 
 	std::unique_ptr<DirectoryMonitor> m_directoryMonitor;
+	std::unordered_map<DirectoryMonitor::Token, std::wstring> m_tokensToRepositories;
+	boost::shared_mutex m_tokensToRepositoriesMutex;
 
 	void MonitorRepositoryDirectories(const Git::Status& status);
-	void OnFileChanged(const boost::filesystem::path& path, DirectoryMonitor::FileAction action);
+	void OnFileChanged(DirectoryMonitor::Token token, const boost::filesystem::path& path, DirectoryMonitor::FileAction action);
 
 public:
 	StatusCache();

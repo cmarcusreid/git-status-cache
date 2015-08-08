@@ -40,7 +40,7 @@ class CReadChangesServer;
 class CReadChangesRequest
 {
 public:
-	CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, BOOL b, DWORD dw, DWORD size);
+	CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, BOOL b, DWORD dw, DWORD size, UINT32 token);
 
 	~CReadChangesRequest();
 
@@ -93,6 +93,9 @@ protected:
 	// Double buffer strategy so that we can issue a new read
 	// request before we process the current buffer.
 	vector<BYTE> m_BackupBuffer;
+
+	// Token to identify notifications resulting from this request.
+	UINT32 m_token;
 };
 
 ///////////////////////////////////////////////////////////////////////////

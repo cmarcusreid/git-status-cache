@@ -77,36 +77,37 @@ void CReadDirectoryChanges::Terminate()
 	}
 }
 
-void CReadDirectoryChanges::AddDirectory( LPCTSTR szDirectory, BOOL bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize ) 
+void CReadDirectoryChanges::AddDirectory(LPCTSTR szDirectory, UINT32 token, BOOL bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize)
 {
 	if (!m_hThread)
 		Init();
 
-	CReadChangesRequest* pRequest = new CReadChangesRequest(m_pServer, szDirectory, bWatchSubtree, dwNotifyFilter, dwBufferSize);
+	CReadChangesRequest* pRequest = new CReadChangesRequest(m_pServer, szDirectory, bWatchSubtree, dwNotifyFilter, dwBufferSize, token);
 	QueueUserAPC(CReadChangesServer::AddDirectoryProc, m_hThread, (ULONG_PTR)pRequest);
 }
 
-void CReadDirectoryChanges::Push(DWORD dwAction, CStringW& wstrFilename) 
+void CReadDirectoryChanges::Push(UINT32 token, DWORD dwAction, CStringW& wstrFilename)
 {
-	m_Notifications.push( TDirectoryChangeNotification(dwAction, wstrFilename) );
+	m_Notifications.push( TDirectoryChangeNotification(token, dwAction, wstrFilename) );
 }
 
-bool  CReadDirectoryChanges::Pop(DWORD& dwAction, CStringW& wstrFilename) 
+bool  CReadDirectoryChanges::Pop(UINT32& token, DWORD& dwAction, CStringW& wstrFilename)
 {
-	TDirectoryChangeNotification pair;
-	if (!m_Notifications.pop(pair))
+	TDirectoryChangeNotification tuple;
+	if (!m_Notifications.pop(tuple))
 		return false;
 
-	dwAction = pair.first;
-	wstrFilename = pair.second;
+	token = std::get<0>(tuple);
+	dwAction = std::get<1>(tuple);
+	wstrFilename = std::get<2>(tuple);
 
 	return true;
 }
 
-bool  CReadDirectoryChanges::Pop(DWORD& dwAction, std::wstring& wstrFilename)
+bool  CReadDirectoryChanges::Pop(UINT32& token, DWORD& dwAction, std::wstring& wstrFilename)
 {
 	CStringW filename;
-	if (this->Pop(dwAction, filename))
+	if (this->Pop(token, dwAction, filename))
 	{
 		wstrFilename = std::wstring(filename);
 		return true;

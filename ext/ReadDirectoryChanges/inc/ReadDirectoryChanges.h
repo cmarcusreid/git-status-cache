@@ -31,7 +31,7 @@
 
 #include "ThreadSafeQueue.h"
 
-typedef std::pair<DWORD,CStringW> TDirectoryChangeNotification;
+typedef std::tuple<UINT32, DWORD,CStringW> TDirectoryChangeNotification;
 
 namespace ReadDirectoryChangesPrivate
 {
@@ -104,6 +104,7 @@ public:
 	/// Add a new directory to be monitored.
 	/// </summary>
 	/// <param name="wszDirectory">Directory to monitor.</param>
+	/// <param name="token">Token identifying this request. Will be passed back with notificaitons.</param>
 	/// <param name="bWatchSubtree">True to also monitor subdirectories.</param>
 	/// <param name="dwNotifyFilter">The types of file system events to monitor, such as FILE_NOTIFY_CHANGE_ATTRIBUTES.</param>
 	/// <param name="dwBufferSize">The size of the buffer used for overlapped I/O.</param>
@@ -113,7 +114,7 @@ public:
 	/// ReadDirectoryChangesW call for the given directory with the given flags.
 	/// </para>
 	/// </remarks>
-	void AddDirectory( LPCTSTR wszDirectory, BOOL bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize=16384 );
+	void AddDirectory(LPCTSTR wszDirectory, UINT32 token, BOOL bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize = 16384);
 
 	/// <summary>
 	/// Return a handle for the Win32 Wait... functions that will be
@@ -121,12 +122,12 @@ public:
 	/// </summary>
 	HANDLE GetWaitHandle() { return m_Notifications.GetWaitHandle(); }
 
-	bool Pop(DWORD& dwAction, CStringW& wstrFilename);
+	bool Pop(UINT32& token, DWORD& dwAction, CStringW& wstrFilename);
 
-	bool Pop(DWORD& dwAction, std::wstring& wstrFilename);
+	bool Pop(UINT32& token, DWORD& dwAction, std::wstring& wstrFilename);
 
 	// "Push" is for usage by ReadChangesRequest.  Not intended for external usage.
-	void Push(DWORD dwAction, CStringW& wstrFilename);
+	void Push(UINT32 token, DWORD dwAction, CStringW& wstrFilename);
 
 	// Check if the queue overflowed. If so, clear it and return true.
 	bool CheckOverflow();
