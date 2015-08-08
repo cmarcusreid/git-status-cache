@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "StatusCache.h"
+#include <boost/filesystem/operations.hpp>
 
 StatusCache::StatusCache()
 {
@@ -20,6 +21,14 @@ void StatusCache::OnFileChanged(const boost::filesystem::path& path, DirectoryMo
 	{
 		pathToSearch = path.parent_path();
 	}
+	
+	while (!boost::filesystem::exists(pathToSearch))
+	{
+		if (!pathToSearch.has_parent_path())
+			return;
+		pathToSearch = pathToSearch.parent_path();
+	}
+
 	auto repositoryPath = m_git.DiscoverRepository(pathToSearch.c_str());
 	if (std::get<0>(repositoryPath))
 	{
