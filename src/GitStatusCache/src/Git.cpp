@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Git.h"
+#include <boost/filesystem/operations.hpp>
 
 std::string ConvertToUtf8(const std::wstring& unicodeString)
 {
@@ -11,6 +12,20 @@ std::wstring ConvertToUnicode(const std::string& utf8String)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.from_bytes(utf8String);
+}
+
+std::wstring ReadFirstLineInFile(const boost::filesystem::path& path)
+{
+	if (!boost::filesystem::exists(path))
+		return std::wstring();
+
+	auto fileStream = std::wifstream(path.c_str());
+	if (!fileStream.good())
+		return std::wstring();
+
+	std::wstring firstLine;
+	std::getline(fileStream, firstLine);
+	return firstLine;
 }
 
 std::wstring ConvertErrorCodeToString(git_error_code errorCode)
@@ -136,6 +151,8 @@ bool Git::GetRepositoryState(Git::Status& status, UniqueGitRepository& repositor
 			<< LR"(", "state": ")" << state << LR"(" })";
 		return false;
 	case GIT_REPOSITORY_STATE_NONE:
+		if (git_repository_head_detached(repository.get()))
+			status.State = std::wstring(L"DETACHED");
 		return true;
 	case GIT_REPOSITORY_STATE_MERGE:
 		status.State = std::wstring(L"MERGING");
@@ -165,6 +182,37 @@ bool Git::GetRepositoryState(Git::Status& status, UniqueGitRepository& repositor
 		status.State = std::wstring(L"AM/REBASE");
 		return true;
 	}
+}
+
+bool Git::SetBranchToCurrentCommit(Git::Status& status)
+{
+	auto path = boost::filesystem::path(status.RepositoryPath);
+	path.append(L"HEAD");
+	auto commit = ReadFirstLineInFile(path);
+
+	if (!commit.empty())
+	{
+		status.Branch = commit.substr(0, 7);
+		return true;
+	}
+
+	return false;
+}
+
+bool Git::SetBranchFromRebaseApplyHeadName(Git::Status& status)
+{
+	auto path = boost::filesystem::path(status.RepositoryPath);
+	path.append(L"rebase-apply/head-name");
+	auto headName = ReadFirstLineInFile(path);
+
+	const auto patternToStrip = std::wstring(L"refs/heads/");
+	if (headName.size() > patternToStrip.size() && headName.find(patternToStrip) == 0)
+	{
+		status.Branch = headName.substr(patternToStrip.size());
+		return true;
+	}
+
+	return false;
 }
 
 bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
@@ -200,6 +248,13 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	}
 
 	status.Branch = ConvertToUnicode(std::string(git_reference_shorthand(head.get())));
+	if (status.Branch == L"HEAD")
+	{
+		if (status.State == L"DETACHED")
+			SetBranchToCurrentCommit(status);
+		else
+			SetBranchFromRebaseApplyHeadName(status);
+	}
 
 	auto upstream = MakeUniqueGitReference(nullptr);
 	result = git_branch_upstream(&upstream.get(), head.get());

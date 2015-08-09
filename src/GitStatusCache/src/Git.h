@@ -53,6 +53,16 @@ private:
 	bool GetRepositoryState(Status& status, UniqueGitRepository& repository);
 
 	/**
+	 * Attempts to set the branch in the status to the current commit.
+	 */
+	bool SetBranchToCurrentCommit(Status& status);
+
+	/**
+	* Attempts to set the branch in the status using the reference from .git/rebase-apply/head-name.
+	*/
+	bool SetBranchFromRebaseApplyHeadName(Status& status);
+
+	/**
 	* Retrieves the current branch/upstream and updates status.
 	*/
 	bool GetRefStatus(Status& status, UniqueGitRepository& repository);
