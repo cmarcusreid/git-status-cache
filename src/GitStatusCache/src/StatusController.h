@@ -13,6 +13,7 @@ class StatusController : boost::noncopyable
 private:
 	Git m_git;
 	StatusCache m_cache;
+	UniqueHandle m_requestShutdown;
 
 	static boost::property_tree::wptree CreateResponseTree();
 	static void AddArrayToResponseTree(boost::property_tree::wptree& tree, std::wstring&& name, const std::vector<std::wstring>& values);
@@ -21,13 +22,27 @@ private:
 
 	static std::wstring CreateErrorResponse(const std::wstring& request, std::wstring&& error);
 
+	/**
+	* Retrieves current git status.
+	*/
+	std::wstring GetStatus(const boost::property_tree::wptree& requestTree, const std::wstring& request);
+
+	/**
+	 * Shuts down the service.
+	 */
+	std::wstring StatusController::Shutdown();
+
 public:
 	StatusController();
 	~StatusController();
 
 	/**
-	* Deserializes request, retrieves current git status, and returns
-	* serialized response.
+	* Deserializes request and returns serialized response.
 	*/
-	std::wstring GetStatus(const std::wstring& request);
+	std::wstring StatusController::HandleRequest(const std::wstring& request);
+
+	/**
+	 * Blocks until shutdown request received.
+	 */
+	void WaitForShutdownRequest();
 };

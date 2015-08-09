@@ -3,11 +3,25 @@
 
 #include <sstream>
 #include <map>
+#include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 StatusController::StatusController()
+	: m_requestShutdown(MakeUniqueHandle(INVALID_HANDLE_VALUE))
 {
+	auto requestShutdown = ::CreateEvent(
+		nullptr /*lpEventAttributes*/,
+		true    /*manualReset*/,
+		false   /*bInitialState*/,
+		nullptr /*lpName*/);
+	if (requestShutdown == nullptr)
+	{
+		Log("StatusController.Constructor.CreateEventFailed", Severity::Error)
+			<< "Failed to create event to signal shutdown request.";
+		throw std::runtime_error("CreateEvent failed unexpectedly.");
+	}
+	m_requestShutdown = MakeUniqueHandle(requestShutdown);
 }
 
 StatusController::~StatusController()
@@ -63,37 +77,10 @@ StatusController::~StatusController()
 	return WriteJson(responseTree);
 }
 
-std::wstring StatusController::GetStatus(const std::wstring& request)
+std::wstring StatusController::GetStatus(const boost::property_tree::wptree& requestTree, const std::wstring& request)
 {
-	std::wistringstream requestStream(request);
-	boost::property_tree::wptree requestTree;
-
-	try
-	{
-		boost::property_tree::read_json(requestStream, requestTree);
-	}
-	catch (boost::property_tree::json_parser::json_parser_error& exception)
-	{
-		auto exceptionString = std::string(exception.what());
-		auto exceptionDetails = std::wstring(exceptionString.begin(), exceptionString.end());
-		auto error = std::wstring(L"Request must be valid JSON. Failed to parse: ");
-		error.append(exceptionDetails);
-		return CreateErrorResponse(request, std::move(error));
-	}
-
-	auto version = requestTree.get_optional<uint32_t>(L"Version");
-	if (!version.is_initialized())
-	{
-		return CreateErrorResponse(request, L"'Version' must be specified.");
-	}
-
-	if (version.get() != 1)
-	{
-		return CreateErrorResponse(request, L"Requested 'Version' unknown.");
-	}
-	
 	auto path = requestTree.get_optional<std::wstring>(L"Path");
-	if (!version.is_initialized())
+	if (!path.is_initialized())
 	{
 		return CreateErrorResponse(request, L"'Path' must be specified.");
 	}
@@ -141,4 +128,67 @@ std::wstring StatusController::GetStatus(const std::wstring& request)
 	AddArrayToResponseTree(responseTree, L"Conflicted", statusToReport.Conflicted);
 
 	return WriteJson(responseTree);
+}
+
+std::wstring StatusController::Shutdown()
+{
+	Log("StatusController.Shutdown", Severity::Info) << LR"(Shutting down due to client request.")";
+	::SetEvent(m_requestShutdown);
+
+	auto responseTree = CreateResponseTree();
+	responseTree.put(L"Result", L"Shutting down.");
+	return WriteJson(responseTree);
+}
+
+std::wstring StatusController::HandleRequest(const std::wstring& request)
+{
+	std::wistringstream requestStream(request);
+	boost::property_tree::wptree requestTree;
+
+	try
+	{
+		boost::property_tree::read_json(requestStream, requestTree);
+	}
+	catch (boost::property_tree::json_parser::json_parser_error& exception)
+	{
+		auto exceptionString = std::string(exception.what());
+		auto exceptionDetails = std::wstring(exceptionString.begin(), exceptionString.end());
+		auto error = std::wstring(L"Request must be valid JSON. Failed to parse: ");
+		error.append(exceptionDetails);
+		return CreateErrorResponse(request, std::move(error));
+	}
+
+	auto version = requestTree.get_optional<uint32_t>(L"Version");
+	if (!version.is_initialized())
+	{
+		return CreateErrorResponse(request, L"'Version' must be specified.");
+	}
+
+	if (version.get() != 1)
+	{
+		return CreateErrorResponse(request, L"Requested 'Version' unknown.");
+	}
+
+	auto action = requestTree.get_optional<std::wstring>(L"Action");
+	if (!action.is_initialized())
+	{
+		return CreateErrorResponse(request, L"'Action' must be specified.");
+	}
+
+	if (boost::iequals(action.get(), L"GetStatus"))
+	{
+		return GetStatus(requestTree, request);
+	}
+
+	if (boost::iequals(action.get(), L"Shutdown"))
+	{
+		return Shutdown();
+	}
+
+	return CreateErrorResponse(request, L"'Action' unrecognized.");
+}
+
+void StatusController::WaitForShutdownRequest()
+{
+	::WaitForSingleObject(m_requestShutdown, INFINITE);
 }

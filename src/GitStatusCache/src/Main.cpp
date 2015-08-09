@@ -43,14 +43,6 @@ void ThrowIfMutuallyExclusiveOptionsSet(
 	}
 }
 
-void WaitForEnter()
-{
-#pragma push_macro("max")
-#undef max
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-#pragma pop_macro("max")
-}
-
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	int argc;
@@ -101,8 +93,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	Logging::LoggingInitializationScope enableLogging(loggingSettings);
 
 	StatusController statusController;
-	NamedPipeServer server([&statusController](const std::wstring& request) { return statusController.GetStatus(request); });
+	NamedPipeServer server([&statusController](const std::wstring& request) { return statusController.HandleRequest(request); });
 
-	WaitForEnter();
+	statusController.WaitForShutdownRequest();
+
 	return 0;
 }
