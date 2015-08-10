@@ -73,11 +73,11 @@ void CachePrimer::WaitForPrimingTimerExpiration()
 	Log("CachePrimer.WaitForPrimingTimerExpiration.Stop", Severity::Verbose) << "Thread for cache priming stopping.";
 }
 
-void CachePrimer::SchedulePrimingForRepositoryPathInOneSecond(const std::wstring& repositoryPath)
+void CachePrimer::SchedulePrimingForRepositoryPathInFiveSeconds(const std::wstring& repositoryPath)
 {
 	WriteLock writeLock(m_primingMutex);
 	m_repositoriesToPrime.insert(repositoryPath);
-	if (m_primingTimer.expires_from_now(boost::posix_time::seconds(1)))
+	if (m_primingTimer.expires_from_now(boost::posix_time::seconds(5)))
 		m_primingTimer.async_wait([this](boost::system::error_code errorCode) { this->OnPrimingTimerExpiration(errorCode); });
 }
 

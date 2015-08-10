@@ -59,5 +59,5 @@ void CacheInvalidator::OnFileChanged(DirectoryMonitor::Token token, const boost:
 			<< LR"(", "filePath": ")" << path.c_str() << LR"(" })";
 	}
 
-	m_cachePrimer.SchedulePrimingForRepositoryPathInOneSecond(repositoryPath);
+	m_cachePrimer.SchedulePrimingForRepositoryPathInFiveSeconds(repositoryPath);
 }

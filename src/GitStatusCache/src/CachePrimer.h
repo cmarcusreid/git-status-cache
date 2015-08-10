@@ -38,11 +38,11 @@ public:
 	~CachePrimer();
 
 	/**
-	* Cancels any currently scheduled priming and reschedules for one second in the future.
-	* Called repeatedly on file changes to refresh status for repositories one second after
+	* Cancels any currently scheduled priming and reschedules for five seconds in the future.
+	* Called repeatedly on file changes to refresh status for repositories five seconds after
 	* a wave file change events (ex. a build) subsides.
 	*/
-	void SchedulePrimingForRepositoryPathInOneSecond(const std::wstring& repositoryPath);
+	void SchedulePrimingForRepositoryPathInFiveSeconds(const std::wstring& repositoryPath);
 
 	/**
 	* Schedules cache priming for sixty seconds in the future.

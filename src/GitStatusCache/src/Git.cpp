@@ -254,6 +254,7 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 			SetBranchToCurrentCommit(status);
 		else
 			SetBranchFromRebaseApplyHeadName(status);
+		return true;
 	}
 
 	auto upstream = MakeUniqueGitReference(nullptr);
