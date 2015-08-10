@@ -89,6 +89,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Cache.h" />
+    <ClInclude Include="..\src\CacheInvalidator.h" />
+    <ClInclude Include="..\src\CachePrimer.h" />
     <ClInclude Include="..\src\Git.h" />
     <ClInclude Include="..\src\SmartPointers.h" />
     <ClInclude Include="..\src\StatusCache.h" />
@@ -106,6 +109,9 @@
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\Cache.cpp" />
+    <ClCompile Include="..\src\CacheInvalidator.cpp" />
+    <ClCompile Include="..\src\CachePrimer.cpp" />
     <ClCompile Include="..\src\DirectoryMonitor.cpp" />
     <ClCompile Include="..\src\Git.cpp" />
     <ClCompile Include="..\src\LoggingModule.cpp" />

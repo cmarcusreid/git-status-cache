@@ -260,7 +260,7 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	result = git_branch_upstream(&upstream.get(), head.get());
 	if (result == GIT_ENOTFOUND)
 	{
-		Log("Git.GetRefStatus.NoUpstream", Severity::Verbose)
+		Log("Git.GetRefStatus.NoUpstream", Severity::Spam)
 			<< LR"(Branch does not have a remote tracking reference. { "repositoryPath": ")" << status.RepositoryPath
 			<< LR"(", "localBranch": ")" << status.Branch << LR"(" })";
 		return true;

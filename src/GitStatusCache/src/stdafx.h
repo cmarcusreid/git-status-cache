@@ -7,9 +7,12 @@
 
 #include "targetver.h"
 
+#define WIN32_LEAN_AND_MEAN
+
 #include <stdio.h>
 #include <tchar.h>
 #include <windows.h>
+#include <shellapi.h>
 #include <atlstr.h>
 
 #include <algorithm>
@@ -35,6 +38,8 @@
 #endif
 
 #include <boost/core/noncopyable.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 #include "Logging.h"
 using namespace Logging;
