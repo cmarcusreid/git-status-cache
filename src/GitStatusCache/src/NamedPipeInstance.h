@@ -15,8 +15,8 @@ public:
 	};
 
 private:
-	using OnClientRequestCallback = std::function<std::wstring(const std::wstring&)>;
-	using ReadResult = std::pair<IoResult, std::wstring>;
+	using OnClientRequestCallback = std::function<std::string(const std::string&)>;
+	using ReadResult = std::pair<IoResult, std::string>;
 	const size_t BufferSize = 4096;
 
 	bool m_isClosed = false;
@@ -27,7 +27,7 @@ private:
 
 	void OnClientRequest();
 	ReadResult ReadRequest();
-	IoResult WriteResponse(const std::wstring& response);
+	IoResult WriteResponse(const std::string& response);
 
 public:
 	/**

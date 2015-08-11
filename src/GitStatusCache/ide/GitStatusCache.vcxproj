@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(SolutionDir)\..\ext\libgit2\include;$(SolutionDir)\..\ext\ReadDirectoryChanges\inc;$(SolutionDir)\..\ext\ScopedResource\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(SolutionDir)\..\ext\libgit2\include;$(SolutionDir)\..\ext\rapidjson\include;$(SolutionDir)\..\ext\ReadDirectoryChanges\inc;$(SolutionDir)\..\ext\ScopedResource\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -76,7 +76,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(SolutionDir)\..\ext\libgit2\include;$(SolutionDir)\..\ext\ReadDirectoryChanges\inc;$(SolutionDir)\..\ext\ScopedResource\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(SolutionDir)\..\ext\libgit2\include;$(SolutionDir)\..\ext\rapidjson\include;$(SolutionDir)\..\ext\ReadDirectoryChanges\inc;$(SolutionDir)\..\ext\ScopedResource\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -106,6 +106,7 @@
     <ClInclude Include="..\src\NamedPipeInstance.h" />
     <ClInclude Include="..\src\NamedPipeServer.h" />
     <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="..\src\StringConverters.h" />
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -127,9 +128,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ext\libgit2\build\git2.vcxproj">
-      <Project>{b83ba589-2311-4a01-85b1-6bbc41a05f31}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\ext\ReadDirectoryChanges\ide\ReadDirectoryChangesLib.vcxproj">
       <Project>{a14f8b89-3dbc-4da9-a7d7-95070ab4dcf6}</Project>
     </ProjectReference>

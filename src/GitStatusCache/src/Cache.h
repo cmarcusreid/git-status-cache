@@ -14,7 +14,7 @@ private:
 	using UpgradedLock = boost::upgrade_to_unique_lock<boost::shared_mutex>;
 
 	Git m_git;
-	std::unordered_map<std::wstring, std::tuple<bool, Git::Status>> m_cache;
+	std::unordered_map<std::string, std::tuple<bool, Git::Status>> m_cache;
 	boost::shared_mutex m_cacheMutex;
 
 public:
@@ -22,17 +22,17 @@ public:
 	* Retrieves current git status for repository at provided path.
 	* Returns from cache if present, otherwise queries git and adds to cache.
 	*/
-	std::tuple<bool, Git::Status> GetStatus(const std::wstring& repositoryPath);
+	std::tuple<bool, Git::Status> GetStatus(const std::string& repositoryPath);
 
 	/**
 	* Computes status and loads cache entry if it's not already present.
 	*/
-	void PrimeCacheEntry(const std::wstring& repositoryPath);
+	void PrimeCacheEntry(const std::string& repositoryPath);
 
 	/**
 	* Invalidates cached git status for repository at provided path.
 	*/
-	bool InvalidateCacheEntry(const std::wstring& repositoryPath);
+	bool InvalidateCacheEntry(const std::string& repositoryPath);
 
 	/**
 	* Invalidates all cached git status information.

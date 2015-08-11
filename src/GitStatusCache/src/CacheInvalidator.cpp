@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CacheInvalidator.h"
+#include "StringConverters.h"
 
 CacheInvalidator::CacheInvalidator(const std::shared_ptr<Cache>& cache)
 	: m_cache(cache)
@@ -18,7 +19,7 @@ void CacheInvalidator::MonitorRepositoryDirectories(const Git::Status& status)
 	auto workingDirectory = status.WorkingDirectory;
 	if (!workingDirectory.empty())
 	{
-		auto token = m_directoryMonitor->AddDirectory(workingDirectory);
+		auto token = m_directoryMonitor->AddDirectory(ConvertToUnicode(workingDirectory));
 		WriteLock writeLock(m_tokensToRepositoriesMutex);
 		m_tokensToRepositories[token] = status.RepositoryPath;
 	}
@@ -28,7 +29,7 @@ void CacheInvalidator::MonitorRepositoryDirectories(const Git::Status& status)
 	{
 		if (workingDirectory.empty() || repositoryPath.find(workingDirectory) != 0)
 		{
-			auto token = m_directoryMonitor->AddDirectory(repositoryPath);
+			auto token = m_directoryMonitor->AddDirectory(ConvertToUnicode(repositoryPath));
 			WriteLock writeLock(m_tokensToRepositoriesMutex);
 			m_tokensToRepositories[token] = status.RepositoryPath;
 		}
@@ -37,14 +38,14 @@ void CacheInvalidator::MonitorRepositoryDirectories(const Git::Status& status)
 
 void CacheInvalidator::OnFileChanged(DirectoryMonitor::Token token, const boost::filesystem::path& path, DirectoryMonitor::FileAction action)
 {
-	std::wstring repositoryPath;
+	std::string repositoryPath;
 	{
 		ReadLock readLock(m_tokensToRepositoriesMutex);
 		auto iterator = m_tokensToRepositories.find(token);
 		if (iterator == m_tokensToRepositories.end())
 		{
 			Log("CacheInvalidator.OnFileChanged.FailedToFindToken", Severity::Error)
-				<< LR"(Failed to find token to repository mapping. { "token": )" << token << LR"(" })";
+				<< R"(Failed to find token to repository mapping. { "token": )" << token << R"(" })";
 			throw std::logic_error("Failed to find token to repository mapping.");
 		}
 		repositoryPath = iterator->second;
@@ -54,9 +55,9 @@ void CacheInvalidator::OnFileChanged(DirectoryMonitor::Token token, const boost:
 	if (invalidatedEntry)
 	{
 		Log("CacheInvalidator.OnFileChanged.InvalidatedCacheEntry", Severity::Info)
-			<< LR"(Invalidated git status in cache for file change. { "token": )" << token
-			<< LR"(, "repositoryPath": ")" << repositoryPath
-			<< LR"(", "filePath": ")" << path.c_str() << LR"(" })";
+			<< R"(Invalidated git status in cache for file change. { "token": )" << token
+			<< R"(, "repositoryPath": ")" << repositoryPath
+			<< R"(", "filePath": ")" << path.c_str() << R"(" })";
 	}
 
 	m_cachePrimer.SchedulePrimingForRepositoryPathInFiveSeconds(repositoryPath);

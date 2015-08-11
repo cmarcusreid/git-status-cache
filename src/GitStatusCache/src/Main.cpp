@@ -93,7 +93,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	Logging::LoggingInitializationScope enableLogging(loggingSettings);
 
 	StatusController statusController;
-	NamedPipeServer server([&statusController](const std::wstring& request) { return statusController.HandleRequest(request); });
+	NamedPipeServer server([&statusController](const std::string& request) { return statusController.HandleRequest(request); });
 
 	statusController.WaitForShutdownRequest();
 

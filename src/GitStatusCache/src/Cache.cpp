@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Cache.h"
 
-std::tuple<bool, Git::Status> Cache::GetStatus(const std::wstring& repositoryPath)
+std::tuple<bool, Git::Status> Cache::GetStatus(const std::string& repositoryPath)
 {
 	auto foundResultInCache = false;
 	std::tuple<bool, Git::Status> cachedStatus;
@@ -19,12 +19,12 @@ std::tuple<bool, Git::Status> Cache::GetStatus(const std::wstring& repositoryPat
 	if (foundResultInCache)
 	{
 		Log("Cache.GetStatus.CacheHit", Severity::Info)
-			<< LR"(Found git status in cache. { "repositoryPath": ")" << repositoryPath << LR"(" })";
+			<< R"(Found git status in cache. { "repositoryPath": ")" << repositoryPath << R"(" })";
 		return cachedStatus;
 	}
 
 	Log("Cache.GetStatus.CacheMiss", Severity::Warning)
-		<< LR"(Failed to find git status in cache. { "repositoryPath": ")" << repositoryPath << LR"(" })";
+		<< R"(Failed to find git status in cache. { "repositoryPath": ")" << repositoryPath << R"(" })";
 
 	auto status = m_git.GetStatus(repositoryPath);
 
@@ -36,7 +36,7 @@ std::tuple<bool, Git::Status> Cache::GetStatus(const std::wstring& repositoryPat
 	return status;
 }
 
-void Cache::PrimeCacheEntry(const std::wstring& repositoryPath)
+void Cache::PrimeCacheEntry(const std::string& repositoryPath)
 {
 	{
 		ReadLock readLock(m_cacheMutex);
@@ -46,7 +46,7 @@ void Cache::PrimeCacheEntry(const std::wstring& repositoryPath)
 	}
 
 	Log("Cache.PrimeCacheEntry", Severity::Info)
-		<< LR"(Priming cache entry. { "repositoryPath": ")" << repositoryPath << LR"(" })";
+		<< R"(Priming cache entry. { "repositoryPath": ")" << repositoryPath << R"(" })";
 
 	auto status = m_git.GetStatus(repositoryPath);
 
@@ -56,7 +56,7 @@ void Cache::PrimeCacheEntry(const std::wstring& repositoryPath)
 	}
 }
 
-bool Cache::InvalidateCacheEntry(const std::wstring& repositoryPath)
+bool Cache::InvalidateCacheEntry(const std::string& repositoryPath)
 {
 	{
 		UpgradableLock readLock(m_cacheMutex);
@@ -84,5 +84,5 @@ void Cache::InvalidateAllCacheEntries()
 	}
 
 	Log("Cache.InvalidateAllCacheEntries.", Severity::Warning)
-		<< LR"(Invalidated all git status information in cache.)";
+		<< R"(Invalidated all git status information in cache.)";
 }

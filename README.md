@@ -40,4 +40,9 @@ CMake is required to build. See libgit2 [build instructions](https://libgit2.git
 	cmake --build . --config Debug
 	cmake --build . --config Release
 
+#### rapidjson ####
+
+[rapidjson](https://github.com/miloyip/rapidjson/ "rapidjson") headers are included as a submodule. To pull locally:
+
+	git submodule update --init --recursive
 

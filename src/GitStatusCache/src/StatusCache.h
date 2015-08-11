@@ -18,5 +18,5 @@ public:
 	* Retrieves current git status for repository at provided path.
 	* Returns from cache if present, otherwise queries git and adds to cache.
 	*/
-	std::tuple<bool, Git::Status> GetStatus(const std::wstring& repositoryPath);
+	std::tuple<bool, Git::Status> GetStatus(const std::string& repositoryPath);
 };

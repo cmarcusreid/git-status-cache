@@ -9,37 +9,37 @@ class Git
 public:
 	struct Status
 	{
-		std::wstring RepositoryPath;
-		std::wstring WorkingDirectory;
-		std::wstring State;
+		std::string RepositoryPath;
+		std::string WorkingDirectory;
+		std::string State;
 
-		std::wstring Branch;
-		std::wstring Upstream;
+		std::string Branch;
+		std::string Upstream;
 		int AheadBy = 0;
 		int BehindBy = 0;
 
-		std::vector<std::wstring> IndexAdded;
-		std::vector<std::wstring> IndexModified;
-		std::vector<std::wstring> IndexDeleted;
-		std::vector<std::wstring> IndexTypeChange;
-		std::vector<std::pair<std::wstring, std::wstring>> IndexRenamed;
+		std::vector<std::string> IndexAdded;
+		std::vector<std::string> IndexModified;
+		std::vector<std::string> IndexDeleted;
+		std::vector<std::string> IndexTypeChange;
+		std::vector<std::pair<std::string, std::string>> IndexRenamed;
 
-		std::vector<std::wstring> WorkingAdded;
-		std::vector<std::wstring> WorkingModified;
-		std::vector<std::wstring> WorkingDeleted;
-		std::vector<std::wstring> WorkingTypeChange;
-		std::vector<std::wstring> WorkingUnreadable;
-		std::vector<std::pair<std::wstring, std::wstring>> WorkingRenamed;
+		std::vector<std::string> WorkingAdded;
+		std::vector<std::string> WorkingModified;
+		std::vector<std::string> WorkingDeleted;
+		std::vector<std::string> WorkingTypeChange;
+		std::vector<std::string> WorkingUnreadable;
+		std::vector<std::pair<std::string, std::string>> WorkingRenamed;
 
-		std::vector<std::wstring> Ignored;
-		std::vector<std::wstring> Conflicted;
+		std::vector<std::string> Ignored;
+		std::vector<std::string> Conflicted;
 	};
 
 private:
 	/**
 	* Searches for repository containing provided path and updates status.
 	*/
-	bool DiscoverRepository(Status& status, const std::wstring& path);
+	bool DiscoverRepository(Status& status, const std::string& path);
 
 	/**
 	* Retrieves the repository's working directory and updates status.
@@ -79,10 +79,10 @@ public:
 	/**
 	* Searches for repository containing provided path and updates status.
 	*/
-	std::tuple<bool, std::wstring> DiscoverRepository(const std::wstring& path);
+	std::tuple<bool, std::string> DiscoverRepository(const std::string& path);
 
 	/**
 	 * Retrieves current git status for repository at provided path.
 	 */
-	std::tuple<bool, Git::Status> GetStatus(const std::wstring& path);
+	std::tuple<bool, Git::Status> GetStatus(const std::string& path);
 };

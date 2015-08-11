@@ -45,7 +45,7 @@ void CachePrimer::OnPrimingTimerExpiration(boost::system::error_code errorCode)
 	if (errorCode != 0)
 		return;
 
-	std::unordered_set<std::wstring> repositoriesToPrime;
+	std::unordered_set<std::string> repositoriesToPrime;
 	{
 		WriteLock writeLock(m_primingMutex);
 		m_repositoriesToPrime.swap(repositoriesToPrime);
@@ -73,7 +73,7 @@ void CachePrimer::WaitForPrimingTimerExpiration()
 	Log("CachePrimer.WaitForPrimingTimerExpiration.Stop", Severity::Verbose) << "Thread for cache priming stopping.";
 }
 
-void CachePrimer::SchedulePrimingForRepositoryPathInFiveSeconds(const std::wstring& repositoryPath)
+void CachePrimer::SchedulePrimingForRepositoryPathInFiveSeconds(const std::string& repositoryPath)
 {
 	WriteLock writeLock(m_primingMutex);
 	m_repositoriesToPrime.insert(repositoryPath);

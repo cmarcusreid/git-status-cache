@@ -1,11 +1,6 @@
 #include "stdafx.h"
 #include "StatusController.h"
-
-#include <sstream>
-#include <map>
 #include <boost/algorithm/string.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 StatusController::StatusController()
 	: m_requestShutdown(MakeUniqueHandle(INVALID_HANDLE_VALUE))
@@ -28,164 +23,169 @@ StatusController::~StatusController()
 {
 }
 
-/*static*/ boost::property_tree::wptree StatusController::CreateResponseTree()
+/*static*/ void StatusController::AddStringToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, std::string&& value)
 {
-	boost::property_tree::wptree responseTree;
-	responseTree.put(L"Version", 1);
-	return responseTree;
+	writer.String(name.c_str());
+	writer.String(value.c_str());
 }
 
-/*static*/ void StatusController::AddArrayToResponseTree(boost::property_tree::wptree& tree, std::wstring&& name, const std::vector<std::wstring>& values)
+/*static*/ void StatusController::AddUintToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, uint32_t value)
 {
-	boost::property_tree::wptree childArray;
+	writer.String(name.c_str());
+	writer.Uint(value);
+}
+
+/*static*/ void StatusController::AddArrayToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, const std::vector<std::string>& values)
+{
+	writer.String(name.c_str());
+	writer.StartArray();
 	for (const auto& value : values)
-	{
-		boost::property_tree::wptree child;
-		child.put(L"", value);
-		childArray.push_back(std::make_pair(L"", child));
-	}
-	tree.add_child(std::move(name), childArray);
+		writer.String(value.c_str());
+	writer.EndArray();
 }
 
-/*static*/ void StatusController::AddArrayToResponseTree(boost::property_tree::wptree& tree, std::wstring&& name, const std::vector<std::pair<std::wstring, std::wstring>>& values)
+/*static*/ void StatusController::AddVersionToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer)
 {
-	boost::property_tree::wptree childArray;
-	for (const auto& value : values)
-	{
-		boost::property_tree::wptree child;
-		child.put(L"Old", value.first);
-		child.put(L"New", value.second);
-		childArray.push_back(std::make_pair(L"", child));
-	}
-	tree.add_child(std::move(name), childArray);
+	AddUintToJson(writer, "Version", 1);
 }
 
-/*static*/ std::wstring StatusController::WriteJson(const boost::property_tree::wptree& tree)
-{
-	std::wostringstream stream;
-	boost::property_tree::write_json(stream, tree, false /*pretty*/);
-	return stream.str();
-}
-
-/*static*/ std::wstring StatusController::CreateErrorResponse(const std::wstring& request, std::wstring&& error)
+/*static*/ std::string StatusController::CreateErrorResponse(const std::string& request, std::string&& error)
 {
 	Log("StatusController.FailedRequest", Severity::Warning)
-		<< LR"(Failed to service request. { "error": ")" << error << LR"(", "request": ")" << request << LR"(" })";
+		<< R"(Failed to service request. { "error": ")" << error << R"(", "request": ")" << request << R"(" })";
 
-	auto responseTree = CreateResponseTree();
-	responseTree.put(L"Error", std::move(error));
-	return WriteJson(responseTree);
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
+
+	writer.StartObject();
+	AddVersionToJson(writer);
+	AddStringToJson(writer, "Error", std::move(error));
+	writer.EndObject();
+
+	return buffer.GetString();
 }
 
-std::wstring StatusController::GetStatus(const boost::property_tree::wptree& requestTree, const std::wstring& request)
+std::string StatusController::GetStatus(const rapidjson::Document& document, const std::string& request)
 {
-	auto path = requestTree.get_optional<std::wstring>(L"Path");
-	if (!path.is_initialized())
+	if (!document.HasMember("Path") || !document["Path"].IsString())
 	{
-		return CreateErrorResponse(request, L"'Path' must be specified.");
+		return CreateErrorResponse(request, "'Path' must be specified.");
 	}
+	auto path = std::string(document["Path"].GetString());
 
-	auto repositoryPath = m_git.DiscoverRepository(path.get());
+	auto repositoryPath = m_git.DiscoverRepository(path);
 	if (!std::get<0>(repositoryPath))
 	{
-		return CreateErrorResponse(request, L"Requested 'Path' is not part of a git repository.");
+		return CreateErrorResponse(request, "Requested 'Path' is not part of a git repository.");
 	}
 
 	auto status = m_cache.GetStatus(std::get<1>(repositoryPath));
 	if (!std::get<0>(status))
 	{
-		return CreateErrorResponse(request, L"Failed to retrieve status of git repository at provided 'Path'.");
+		return CreateErrorResponse(request, "Failed to retrieve status of git repository at provided 'Path'.");
 	}
 
 	auto& statusToReport = std::get<1>(status);
 
-	auto responseTree = CreateResponseTree();
-	responseTree.put(L"Path", path.get());
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
 
-	responseTree.put(L"RepoPath", statusToReport.RepositoryPath);
-	responseTree.put(L"WorkingDir", statusToReport.WorkingDirectory);
-	responseTree.put(L"State", statusToReport.State);
+	writer.StartObject();
 
-	responseTree.put(L"Branch", statusToReport.Branch);
-	responseTree.put(L"Upstream", statusToReport.Upstream);
-	responseTree.put(L"AheadBy", statusToReport.AheadBy);
-	responseTree.put(L"BehindBy", statusToReport.BehindBy);
+	AddVersionToJson(writer);
+	AddStringToJson(writer, "Path", path.c_str());
+	AddStringToJson(writer, "RepoPath", statusToReport.RepositoryPath.c_str());
+	AddStringToJson(writer, "WorkingDir", statusToReport.WorkingDirectory.c_str());
+	AddStringToJson(writer, "State", statusToReport.State.c_str());
+	AddStringToJson(writer, "Branch", statusToReport.Branch.c_str());
+	AddStringToJson(writer, "Upstream", statusToReport.Upstream.c_str());
+	AddUintToJson(writer, "AheadBy", statusToReport.AheadBy);
+	AddUintToJson(writer, "BehindBy", statusToReport.BehindBy);
 
-	AddArrayToResponseTree(responseTree, L"IndexAdded", statusToReport.IndexAdded);
-	AddArrayToResponseTree(responseTree, L"IndexModified", statusToReport.IndexModified);
-	AddArrayToResponseTree(responseTree, L"IndexDeleted", statusToReport.IndexDeleted);
-	AddArrayToResponseTree(responseTree, L"IndexTypeChange", statusToReport.IndexTypeChange);
-	AddArrayToResponseTree(responseTree, L"IndexRenamed", statusToReport.IndexRenamed);
+	AddArrayToJson(writer, "IndexAdded", statusToReport.IndexAdded);
+	AddArrayToJson(writer, "IndexModified", statusToReport.IndexModified);
+	AddArrayToJson(writer, "IndexDeleted", statusToReport.IndexDeleted);
+	AddArrayToJson(writer, "IndexTypeChange", statusToReport.IndexTypeChange);
+	writer.String("IndexRenamed");
+	writer.StartArray();
+	for (const auto& value : statusToReport.IndexRenamed)
+	{
+		writer.StartObject();
+		writer.String("Old");
+		writer.String(value.first.c_str());
+		writer.String("New");
+		writer.String(value.second.c_str());
+		writer.EndObject();
+	}
+	writer.EndArray();
 
-	AddArrayToResponseTree(responseTree, L"WorkingAdded", statusToReport.WorkingAdded);
-	AddArrayToResponseTree(responseTree, L"WorkingModified", statusToReport.WorkingModified);
-	AddArrayToResponseTree(responseTree, L"WorkingDeleted", statusToReport.WorkingDeleted);
-	AddArrayToResponseTree(responseTree, L"WorkingTypeChange", statusToReport.WorkingTypeChange);
-	AddArrayToResponseTree(responseTree, L"WorkingRenamed", statusToReport.WorkingRenamed);
-	AddArrayToResponseTree(responseTree, L"WorkingUnreadable", statusToReport.WorkingUnreadable);
+	AddArrayToJson(writer, "WorkingAdded", statusToReport.WorkingAdded);
+	AddArrayToJson(writer, "WorkingModified", statusToReport.WorkingModified);
+	AddArrayToJson(writer, "WorkingDeleted", statusToReport.WorkingDeleted);
+	AddArrayToJson(writer, "WorkingTypeChange", statusToReport.WorkingTypeChange);
+	writer.String("WorkingRenamed");
+	writer.StartArray();
+	for (const auto& value : statusToReport.WorkingRenamed)
+	{
+		writer.StartObject();
+		writer.String("Old");
+		writer.String(value.first.c_str());
+		writer.String("New");
+		writer.String(value.second.c_str());
+		writer.EndObject();
+	}
+	writer.EndArray();
+	AddArrayToJson(writer, "WorkingUnreadable", statusToReport.WorkingUnreadable);
 
-	AddArrayToResponseTree(responseTree, L"Ignored", statusToReport.Ignored);
-	AddArrayToResponseTree(responseTree, L"Conflicted", statusToReport.Conflicted);
+	AddArrayToJson(writer, "Ignored", statusToReport.Ignored);
+	AddArrayToJson(writer, "Conflicted", statusToReport.Conflicted);
 
-	return WriteJson(responseTree);
+	writer.EndObject();
+
+	return buffer.GetString();
 }
 
-std::wstring StatusController::Shutdown()
+std::string StatusController::Shutdown()
 {
 	Log("StatusController.Shutdown", Severity::Info) << LR"(Shutting down due to client request.")";
 	::SetEvent(m_requestShutdown);
 
-	auto responseTree = CreateResponseTree();
-	responseTree.put(L"Result", L"Shutting down.");
-	return WriteJson(responseTree);
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer{ buffer };
+
+	writer.StartObject();
+	AddVersionToJson(writer);
+	AddStringToJson(writer, "Result", "Shutting down.");
+	writer.EndObject();
+
+	return buffer.GetString();
 }
 
-std::wstring StatusController::HandleRequest(const std::wstring& request)
+std::string StatusController::HandleRequest(const std::string& request)
 {
-	std::wistringstream requestStream(request);
-	boost::property_tree::wptree requestTree;
+	rapidjson::Document document;
+	const auto& parser = document.Parse(request.c_str());
+	if (parser.HasParseError())
+		return CreateErrorResponse(request, "Request must be valid JSON.");
 
-	try
-	{
-		boost::property_tree::read_json(requestStream, requestTree);
-	}
-	catch (boost::property_tree::json_parser::json_parser_error& exception)
-	{
-		auto exceptionString = std::string(exception.what());
-		auto exceptionDetails = std::wstring(exceptionString.begin(), exceptionString.end());
-		auto error = std::wstring(L"Request must be valid JSON. Failed to parse: ");
-		error.append(exceptionDetails);
-		return CreateErrorResponse(request, std::move(error));
-	}
+	if (!document.HasMember("Version") || !document["Version"].IsUint())
+		return CreateErrorResponse(request, "'Version' must be specified.");
+	auto version = document["Version"].GetUint();
 
-	auto version = requestTree.get_optional<uint32_t>(L"Version");
-	if (!version.is_initialized())
-	{
-		return CreateErrorResponse(request, L"'Version' must be specified.");
-	}
+	if (version != 1)
+		return CreateErrorResponse(request, "Requested 'Version' unknown.");
 
-	if (version.get() != 1)
-	{
-		return CreateErrorResponse(request, L"Requested 'Version' unknown.");
-	}
+	if (!document.HasMember("Action") || !document["Action"].IsString())
+		return CreateErrorResponse(request, "'Action' must be specified.");
+	auto action = std::string(document["Action"].GetString());
 
-	auto action = requestTree.get_optional<std::wstring>(L"Action");
-	if (!action.is_initialized())
-	{
-		return CreateErrorResponse(request, L"'Action' must be specified.");
-	}
+	if (boost::iequals(action, "GetStatus"))
+		return GetStatus(document, request);
 
-	if (boost::iequals(action.get(), L"GetStatus"))
-	{
-		return GetStatus(requestTree, request);
-	}
-
-	if (boost::iequals(action.get(), L"Shutdown"))
-	{
+	if (boost::iequals(action, "Shutdown"))
 		return Shutdown();
-	}
 
-	return CreateErrorResponse(request, L"'Action' unrecognized.");
+	return CreateErrorResponse(request, "'Action' unrecognized.");
 }
 
 void StatusController::WaitForShutdownRequest()

@@ -19,7 +19,7 @@ private:
 	CachePrimer m_cachePrimer;
 
 	std::unique_ptr<DirectoryMonitor> m_directoryMonitor;
-	std::unordered_map<DirectoryMonitor::Token, std::wstring> m_tokensToRepositories;
+	std::unordered_map<DirectoryMonitor::Token, std::string> m_tokensToRepositories;
 	boost::shared_mutex m_tokensToRepositoriesMutex;
 
 	/**

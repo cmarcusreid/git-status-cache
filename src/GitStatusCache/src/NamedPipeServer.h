@@ -14,7 +14,7 @@ public:
 	 * Callback for request handling logic. Request provided in argument.
 	 * Returns response.
 	 */
-	using OnClientRequestCallback = std::function<std::wstring(const std::wstring&)>;
+	using OnClientRequestCallback = std::function<std::string(const std::string&)>;
 
 private:
 	std::thread m_serverThread;

@@ -18,7 +18,7 @@ private:
 
 	UniqueHandle m_stopPrimingThread;
 	std::thread m_primingThread;
-	std::unordered_set<std::wstring> m_repositoriesToPrime;
+	std::unordered_set<std::string> m_repositoriesToPrime;
 	boost::asio::io_service m_primingService;
 	boost::asio::deadline_timer m_primingTimer;
 	boost::shared_mutex m_primingMutex;
@@ -42,7 +42,7 @@ public:
 	* Called repeatedly on file changes to refresh status for repositories five seconds after
 	* a wave file change events (ex. a build) subsides.
 	*/
-	void SchedulePrimingForRepositoryPathInFiveSeconds(const std::wstring& repositoryPath);
+	void SchedulePrimingForRepositoryPathInFiveSeconds(const std::string& repositoryPath);
 
 	/**
 	* Schedules cache priming for sixty seconds in the future.

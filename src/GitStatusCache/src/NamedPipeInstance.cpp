@@ -38,12 +38,12 @@ void NamedPipeInstance::OnClientRequest()
 
 NamedPipeInstance::ReadResult NamedPipeInstance::ReadRequest()
 {
-	auto requestBuffer = std::vector<wchar_t>(BufferSize);
+	auto requestBuffer = std::vector<char>(BufferSize);
 	DWORD bytesRead = 0;
 	auto readResult = ::ReadFile(
 		m_pipe,
 		requestBuffer.data(),
-		requestBuffer.capacity() * sizeof(wchar_t),
+		requestBuffer.capacity() * sizeof(char),
 		&bytesRead,
 		nullptr /*lpOverlapped*/);
 
@@ -54,32 +54,32 @@ NamedPipeInstance::ReadResult NamedPipeInstance::ReadRequest()
 		{
 			Log("NamedPipeInstance.ReadRequest.Disconnect", Severity::Verbose)
 				<< "Client disconnected. ReadFile returned ERROR_BROKEN_PIPE.";
-			return ReadResult(IoResult::Aborted, std::wstring());
+			return ReadResult(IoResult::Aborted, std::string());
 		}
 		else if (error == ERROR_OPERATION_ABORTED)
 		{
 			Log("NamedPipeInstance.ReadRequest.Aborted", Severity::Verbose) << "ReadFile returned ERROR_OPERATION_ABORTED.";
-			return ReadResult(IoResult::Aborted, std::wstring());
+			return ReadResult(IoResult::Aborted, std::string());
 		}
 		else
 		{
 			Log("NamedPipeInstance.ReadRequest.UnknownError", Severity::Error)
 				<< R"(ReadFile failed with unexpected error. { "error": )" << error << R"( })";
 			throw std::runtime_error("ReadFile failed unexpectedly.");
-			return ReadResult(IoResult::Error, std::wstring());
+			return ReadResult(IoResult::Error, std::string());
 		}
 	}
 
-	return ReadResult(IoResult::Success, std::wstring(requestBuffer.data(), bytesRead / sizeof(wchar_t)));
+	return ReadResult(IoResult::Success, std::string(requestBuffer.data(), bytesRead / sizeof(char)));
 }
 
-NamedPipeInstance::IoResult NamedPipeInstance::WriteResponse(const std::wstring& response)
+NamedPipeInstance::IoResult NamedPipeInstance::WriteResponse(const std::string& response)
 {
 	DWORD bytesWritten = 0;
 	auto writeResult = ::WriteFile(
 		m_pipe,
 		response.data(),
-		response.size() * sizeof(wchar_t),
+		response.size() * sizeof(char),
 		&bytesWritten,
 		nullptr /*lpOverlapped*/);
 

@@ -7,7 +7,7 @@ StatusCache::StatusCache()
 {
 }
 
-std::tuple<bool, Git::Status> StatusCache::GetStatus(const std::wstring& repositoryPath)
+std::tuple<bool, Git::Status> StatusCache::GetStatus(const std::string& repositoryPath)
 {
 	auto status = m_cache->GetStatus(repositoryPath);
 	if (std::get<0>(status))
