@@ -188,12 +188,9 @@ bool Git::SetBranchToCurrentCommit(Git::Status& status)
 	return false;
 }
 
-bool Git::SetBranchFromRebaseApplyHeadName(Git::Status& status)
+bool Git::SetBranchFromHeadName(Git::Status& status, const boost::filesystem::path& path)
 {
-	auto path = boost::filesystem::path(ConvertToUnicode(status.RepositoryPath));
-	path.append(L"rebase-apply/head-name");
 	auto headName = ReadFirstLineInFile(path);
-
 	const auto patternToStrip = std::string("refs/heads/");
 	if (headName.size() > patternToStrip.size() && headName.find(patternToStrip) == 0)
 	{
@@ -202,6 +199,20 @@ bool Git::SetBranchFromRebaseApplyHeadName(Git::Status& status)
 	}
 
 	return false;
+}
+
+bool Git::SetBranchFromRebaseApplyHeadName(Git::Status& status)
+{
+	auto path = boost::filesystem::path(ConvertToUnicode(status.RepositoryPath));
+	path.append(L"rebase-apply/head-name");
+	return SetBranchFromHeadName(status, path);
+}
+
+bool Git::SetBranchFromRebaseMergeHeadName(Git::Status& status)
+{
+	auto path = boost::filesystem::path(ConvertToUnicode(status.RepositoryPath));
+	path.append(L"rebase-merge/head-name");
+	return SetBranchFromHeadName(status, path);
 }
 
 bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
@@ -240,9 +251,15 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	if (status.Branch == "HEAD")
 	{
 		if (status.State == "DETACHED")
+		{
 			SetBranchToCurrentCommit(status);
+		}
 		else
-			SetBranchFromRebaseApplyHeadName(status);
+		{
+			if (!SetBranchFromRebaseApplyHeadName(status))
+				SetBranchFromRebaseMergeHeadName(status);
+		}
+
 		return true;
 	}
 

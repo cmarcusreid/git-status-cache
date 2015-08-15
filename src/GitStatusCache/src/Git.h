@@ -58,9 +58,19 @@ private:
 	bool SetBranchToCurrentCommit(Status& status);
 
 	/**
+	 * Attempts to set the branch in the status by parsing head-name.
+	 */
+	bool SetBranchFromHeadName(Status& status, const boost::filesystem::path& path);
+
+	/**
 	* Attempts to set the branch in the status using the reference from .git/rebase-apply/head-name.
 	*/
 	bool SetBranchFromRebaseApplyHeadName(Status& status);
+
+	/**
+	* Attempts to set the branch in the status using the reference from .git/rebase-merge/head-name.
+	*/
+	bool SetBranchFromRebaseMergeHeadName(Status& status);
 
 	/**
 	* Retrieves the current branch/upstream and updates status.
