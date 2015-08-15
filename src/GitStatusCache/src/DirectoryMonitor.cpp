@@ -38,31 +38,31 @@ void DirectoryMonitor::WaitForNotifications()
 				{
 				default:
 					Log("DirectoryMonitor.Notification.Unknown", Severity::Warning)
-						<< LR"(Unknown notification for file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
+						<< R"(Unknown notification for file. { "token": )" << token << R"(, "path": ")" << path << R"(" })";
 					break;
 				case FILE_ACTION_ADDED:
 					Log("DirectoryMonitor.Notification.Add", Severity::Spam)
-						<< LR"(Added file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
+						<< R"(Added file. { "token": )" << token << R"(, "path": ")" << path << R"(" })";
 					fileAction = DirectoryMonitor::FileAction::Added;
 					break;
 				case FILE_ACTION_REMOVED:
 					Log("DirectoryMonitor.Notification.Remove", Severity::Spam)
-						<< LR"(Removed file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
+						<< R"(Removed file. { "token": )" << token << R"(, "path": ")" << path << R"(" })";
 					fileAction = DirectoryMonitor::FileAction::Removed;
 					break;
 				case FILE_ACTION_MODIFIED:
 					Log("DirectoryMonitor.Notification.Modified", Severity::Spam)
-						<< LR"(Modified file. { "token": )" << token << LR"(, "path": ")" << path << LR"(" })";
+						<< R"(Modified file. { "token": )" << token << R"(, "path": ")" << path << R"(" })";
 					fileAction = DirectoryMonitor::FileAction::Modified;
 					break;
 				case FILE_ACTION_RENAMED_OLD_NAME:
 					Log("DirectoryMonitor.Notification.RenamedFrom", Severity::Spam)
-						<< LR"(Renamed file. { "token": )" << token << LR"(, "oldPath": ")" << path << LR"(" })";
+						<< R"(Renamed file. { "token": )" << token << R"(, "oldPath": ")" << path << R"(" })";
 					fileAction = DirectoryMonitor::FileAction::RenamedFrom;
 					break;
 				case FILE_ACTION_RENAMED_NEW_NAME:
 					Log("DirectoryMonitor.Notification.RenamedTo", Severity::Spam)
-						<< LR"(Renamed file. { "token": )" << token << LR"(, "newPath": ")" << path << LR"(" })";
+						<< R"(Renamed file. { "token": )" << token << R"(, "newPath": ")" << path << R"(" })";
 					fileAction = DirectoryMonitor::FileAction::RenamedTo;
 					break;
 				}
@@ -110,7 +110,7 @@ DirectoryMonitor::Token DirectoryMonitor::AddDirectory(const std::wstring& direc
 	}
 
 	Log("DirectoryMonitor.AddDirectory", Severity::Info)
-		<< LR"(Registering directory for change notifications. { "token": )" << token << LR"(, "path": ")" << directory << LR"(" })";
+		<< R"(Registering directory for change notifications. { "token": )" << token << R"(, "path": ")" << directory << R"(" })";
 
 	auto notificationFlags =
 		FILE_NOTIFY_CHANGE_LAST_WRITE

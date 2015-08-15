@@ -147,7 +147,7 @@ std::string StatusController::GetStatus(const rapidjson::Document& document, con
 
 std::string StatusController::Shutdown()
 {
-	Log("StatusController.Shutdown", Severity::Info) << LR"(Shutting down due to client request.")";
+	Log("StatusController.Shutdown", Severity::Info) << R"(Shutting down due to client request.")";
 	::SetEvent(m_requestShutdown);
 
 	rapidjson::StringBuffer buffer;

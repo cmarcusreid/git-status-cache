@@ -3,6 +3,7 @@
 #include <boost/log/common.hpp>
 #include "LoggingModule.h"
 #include "LoggingSeverities.h"
+#include "StringConverters.h"
 
 namespace Logging
 {
@@ -24,6 +25,26 @@ namespace Logging
 		{
 			if (LoggingModule::IsEnabled())
 				m_stream << std::forward<T>(value);
+			return *this;
+		}
+
+		LogStream& operator<< (const std::string& value)
+		{
+			if (LoggingModule::IsEnabled())
+			{
+				// boost logger assumes narrow characters are ASCII.
+				m_stream << ConvertToUnicode(value);
+			}
+			return *this;
+		}
+
+		LogStream& operator<< (const char* value)
+		{
+			if (LoggingModule::IsEnabled())
+			{
+				// boost logger assumes narrow characters are ASCII.
+				m_stream << ConvertToUnicode(std::string(value));
+			}
 			return *this;
 		}
 	};

@@ -118,8 +118,8 @@ bool Git::GetWorkingDirectory(Git::Status& status, UniqueGitRepository& reposito
 	{
 		auto lastError = giterr_last();
 		Log("Git.GetWorkingDirectory.FailedToFindWorkingDirectory", Severity::Warning)
-			<< LR"(Failed to find working directory for repository. { "repositoryPath": ")" << status.RepositoryPath
-			<< LR"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << LR"(" })";
+			<< R"(Failed to find working directory for repository. { "repositoryPath": ")" << status.RepositoryPath
+			<< R"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << R"(" })";
 		return false;
 	}
 
@@ -230,9 +230,9 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	{
 		auto lastError = giterr_last();
 		Log("Git.GetRefStatus.FailedToFindHead", Severity::Error)
-			<< LR"(Failed to find HEAD. { "repositoryPath": ")" << status.RepositoryPath
-			<< LR"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
-			<< LR"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << LR"(" })";
+			<< R"(Failed to find HEAD. { "repositoryPath": ")" << status.RepositoryPath
+			<< R"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
+			<< R"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << R"(" })";
 		return false;
 	}
 
@@ -327,9 +327,9 @@ bool Git::GetFileStatus(Git::Status& status, UniqueGitRepository& repository)
 	{
 		auto lastError = giterr_last();
 		Log("Git.GetGitStatus.FailedToCreateStatusList", Severity::Error)
-			<< LR"(Failed to create status list. { "repositoryPath": ")" << status.RepositoryPath
-			<< LR"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
-			<< LR"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << LR"(" })";
+			<< R"(Failed to create status list. { "repositoryPath": ")" << status.RepositoryPath
+			<< R"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
+			<< R"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << R"(" })";
 		return false;
 	}
 
@@ -453,16 +453,16 @@ std::tuple<bool, Git::Status> Git::GetStatus(const std::string& path)
 	{
 		auto lastError = giterr_last();
 		Log("Git.GetGitStatus.FailedToOpenRepository", Severity::Error)
-			<< LR"(Failed to open repository. { "repositoryPath": ")" << status.RepositoryPath
-			<< LR"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
-			<< LR"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << LR"(" })";
+			<< R"(Failed to open repository. { "repositoryPath": ")" << status.RepositoryPath
+			<< R"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
+			<< R"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << R"(" })";
 		return std::make_tuple(false, Git::Status());
 	}
 
 	if (git_repository_is_bare(repository.get()))
 	{
 		Log("Git.GetGitStatus.BareRepository", Severity::Warning)
-			<< LR"(Aborting due to bare repository. { "repositoryPath": ")" << status.RepositoryPath << LR"(" })";
+			<< R"(Aborting due to bare repository. { "repositoryPath": ")" << status.RepositoryPath << R"(" })";
 		return std::make_tuple(false, Git::Status());
 	}
 

@@ -14,12 +14,12 @@ void NamedPipeInstance::OnClientRequest()
 		}
 
 		Log("NamedPipeInstance.OnClientRequest.Request", Severity::Spam)
-			<< LR"(Received request from client. { "request": ")" << readResult.second << LR"(" })";
+			<< R"(Received request from client. { "request": ")" << readResult.second << R"(" })";
 
 		auto response = m_onClientRequestCallback(readResult.second);
 
 		Log("NamedPipeInstance.OnClientRequest.Response", Severity::Spam)
-			<< LR"(Sending response to client. { "response": ")" << response << LR"(" })";
+			<< R"(Sending response to client. { "response": ")" << response << R"(" })";
 
 		auto writeResult = WriteResponse(response);
 		if (writeResult != IoResult::Success)
