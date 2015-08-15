@@ -26,7 +26,7 @@ namespace Logging
 			throw std::logic_error("LoggingModule::Initialize called while logging is already initialized.");
 		}
 
-		if (!settings.EnableConsoleLogging && !settings.EnableFileLogging)
+		if (!settings.EnableFileLogging)
 		{
 			LoggingModule::Uninitialize();
 			return;
@@ -60,13 +60,6 @@ namespace Logging
 			<< message;
 
 		auto locale = boost::locale::generator()("UTF-8");
-
-		if (settings.EnableConsoleLogging)
-		{
-			auto consoleSink = add_console_log();
-			consoleSink->set_formatter(formatter);
-			consoleSink->imbue(locale);
-		}
 
 		if (settings.EnableFileLogging)
 		{

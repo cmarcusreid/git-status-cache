@@ -12,10 +12,4 @@
 #include "LoggingSeverities.h"
 #include "LogStream.h"
 
-namespace Logging
-{
-	inline static LogStream Log(std::string&& eventId, Severity severity)
-	{
-		return LogStream(std::move(eventId), severity);
-	}
-}
+#define Log(eventId, severity) LogStream(std::move(std::string(eventId)), severity)
