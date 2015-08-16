@@ -19,4 +19,9 @@ public:
 	* Returns from cache if present, otherwise queries git and adds to cache.
 	*/
 	std::tuple<bool, Git::Status> GetStatus(const std::string& repositoryPath);
+
+	/**
+	* Returns information about cache's performance.
+	*/
+	CacheStatistics GetCacheStatistics();
 };

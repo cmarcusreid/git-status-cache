@@ -16,6 +16,7 @@
 #include <atlstr.h>
 
 #include <algorithm>
+#include <atomic>
 #include <codecvt>
 #include <locale>
 #include <limits>

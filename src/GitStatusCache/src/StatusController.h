@@ -13,6 +13,17 @@
 class StatusController : boost::noncopyable
 {
 private:
+	using ReadLock = boost::shared_lock<boost::shared_mutex>;
+	using WriteLock = boost::unique_lock<boost::shared_mutex>;
+
+	const boost::posix_time::ptime m_startTime;
+
+	uint64_t m_totalNanosecondsInGetStatus = 0;
+	uint64_t m_minNanosecondsInGetStatus = UINT64_MAX;
+	uint64_t m_maxNanosecondsInGetStatus = 0;
+	uint64_t m_totalGetStatusCalls = 0;
+	boost::shared_mutex m_getStatusStatisticsMutex;
+
 	Git m_git;
 	StatusCache m_cache;
 	UniqueHandle m_requestShutdown;
@@ -23,9 +34,19 @@ private:
 	static void AddStringToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, std::string&& value);
 
 	/**
-	* Adds uint string to JSON response.
+	* Adds uint32_t to JSON response.
 	*/
 	static void AddUintToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, uint32_t value);
+
+	/**
+	* Adds uint64_t to JSON response.
+	*/
+	static void AddUint64ToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, uint64_t value);
+
+	/**
+	* Adds double to JSON response.
+	*/
+	static void AddDoubleToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, double value);
 
 	/**
 	* Adds vector of strings to JSON response.
@@ -43,9 +64,19 @@ private:
 	static std::string CreateErrorResponse(const std::string& request, std::string&& error);
 
 	/**
+	 * Records timing datapoint for GetStatus.
+	 */
+	void RecordGetStatusTime(uint64_t nanosecondsInGetStatus);
+
+	/**
 	* Retrieves current git status.
 	*/
 	std::string GetStatus(const rapidjson::Document& document, const std::string& request);
+
+	/**
+	* Retrieves information about cache's performance.
+	*/
+	std::string GetCacheStatistics();
 
 	/**
 	 * Shuts down the service.

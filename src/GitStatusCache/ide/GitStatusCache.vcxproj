@@ -92,6 +92,7 @@
     <ClInclude Include="..\src\Cache.h" />
     <ClInclude Include="..\src\CacheInvalidator.h" />
     <ClInclude Include="..\src\CachePrimer.h" />
+    <ClInclude Include="..\src\CacheStatistics.h" />
     <ClInclude Include="..\src\Git.h" />
     <ClInclude Include="..\src\SmartPointers.h" />
     <ClInclude Include="..\src\StatusCache.h" />

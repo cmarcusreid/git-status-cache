@@ -18,11 +18,13 @@ std::tuple<bool, Git::Status> Cache::GetStatus(const std::string& repositoryPath
 
 	if (foundResultInCache)
 	{
+		++m_cacheHits;
 		Log("Cache.GetStatus.CacheHit", Severity::Info)
 			<< R"(Found git status in cache. { "repositoryPath": ")" << repositoryPath << R"(" })";
 		return cachedStatus;
 	}
 
+	++m_cacheMisses;
 	Log("Cache.GetStatus.CacheMiss", Severity::Warning)
 		<< R"(Failed to find git status in cache. { "repositoryPath": ")" << repositoryPath << R"(" })";
 
@@ -38,6 +40,7 @@ std::tuple<bool, Git::Status> Cache::GetStatus(const std::string& repositoryPath
 
 void Cache::PrimeCacheEntry(const std::string& repositoryPath)
 {
+	++m_cacheTotalPrimeRequests;
 	{
 		ReadLock readLock(m_cacheMutex);
 		auto cacheEntry = m_cache.find(repositoryPath);
@@ -45,6 +48,7 @@ void Cache::PrimeCacheEntry(const std::string& repositoryPath)
 			return;
 	}
 
+	++m_cacheEffectivePrimeRequests;
 	Log("Cache.PrimeCacheEntry", Severity::Info)
 		<< R"(Priming cache entry. { "repositoryPath": ")" << repositoryPath << R"(" })";
 
@@ -58,6 +62,8 @@ void Cache::PrimeCacheEntry(const std::string& repositoryPath)
 
 bool Cache::InvalidateCacheEntry(const std::string& repositoryPath)
 {
+	++m_cacheTotalInvalidationRequests;
+	bool invalidatedCacheEntry = false;
 	{
 		UpgradableLock readLock(m_cacheMutex);
 		auto cacheEntry = m_cache.find(repositoryPath);
@@ -68,16 +74,19 @@ bool Cache::InvalidateCacheEntry(const std::string& repositoryPath)
 			if (cacheEntry != m_cache.end())
 			{
 				m_cache.erase(cacheEntry);
-				return true;
+				invalidatedCacheEntry = true;
 			}
 		}
 	}
 
-	return false;
+	if (invalidatedCacheEntry)
+		++m_cacheEffectiveInvalidationRequests;
+	return invalidatedCacheEntry;
 }
 
 void Cache::InvalidateAllCacheEntries()
 {
+	++m_cacheInvalidateAllRequests;
 	{
 		WriteLock writeLock(m_cacheMutex);
 		m_cache.clear();
@@ -85,4 +94,17 @@ void Cache::InvalidateAllCacheEntries()
 
 	Log("Cache.InvalidateAllCacheEntries.", Severity::Warning)
 		<< R"(Invalidated all git status information in cache.)";
+}
+
+CacheStatistics Cache::GetCacheStatistics()
+{
+	CacheStatistics statistics;
+	statistics.CacheHits = m_cacheHits;
+	statistics.CacheMisses = m_cacheMisses;
+	statistics.CacheEffectivePrimeRequests = m_cacheEffectivePrimeRequests;
+	statistics.CacheTotalPrimeRequests = m_cacheTotalPrimeRequests;
+	statistics.CacheEffectiveInvalidationRequests = m_cacheEffectiveInvalidationRequests;
+	statistics.CacheTotalInvalidationRequests = m_cacheTotalInvalidationRequests;
+	statistics.CacheInvalidateAllRequests = m_cacheInvalidateAllRequests;
+	return statistics;
 }

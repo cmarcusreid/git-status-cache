@@ -15,3 +15,8 @@ std::tuple<bool, Git::Status> StatusCache::GetStatus(const std::string& reposito
 
 	return status;
 }
+
+CacheStatistics StatusCache::GetCacheStatistics()
+{
+	return m_cache->GetCacheStatistics();
+}

@@ -1,9 +1,11 @@
 #include "stdafx.h"
 #include "StatusController.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/timer/timer.hpp>
 
 StatusController::StatusController()
-	: m_requestShutdown(MakeUniqueHandle(INVALID_HANDLE_VALUE))
+	: m_startTime(boost::posix_time::second_clock::universal_time())
+	, m_requestShutdown(MakeUniqueHandle(INVALID_HANDLE_VALUE))
 {
 	auto requestShutdown = ::CreateEvent(
 		nullptr /*lpEventAttributes*/,
@@ -35,6 +37,18 @@ StatusController::~StatusController()
 	writer.Uint(value);
 }
 
+/*static*/ void StatusController::AddUint64ToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, uint64_t value)
+{
+	writer.String(name.c_str());
+	writer.Uint64(value);
+}
+
+/*static*/ void StatusController::AddDoubleToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, double value)
+{
+	writer.String(name.c_str());
+	writer.Double(value);
+}
+
 /*static*/ void StatusController::AddArrayToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, const std::vector<std::string>& values)
 {
 	writer.String(name.c_str());
@@ -63,6 +77,15 @@ StatusController::~StatusController()
 	writer.EndObject();
 
 	return buffer.GetString();
+}
+
+void StatusController::RecordGetStatusTime(uint64_t nanosecondsInGetStatus)
+{
+	WriteLock writeLock{m_getStatusStatisticsMutex};
+	++m_totalGetStatusCalls;
+	m_totalNanosecondsInGetStatus += nanosecondsInGetStatus;
+	m_minNanosecondsInGetStatus = (std::min)(nanosecondsInGetStatus, m_minNanosecondsInGetStatus);
+	m_maxNanosecondsInGetStatus = (std::max)(nanosecondsInGetStatus, m_maxNanosecondsInGetStatus);
 }
 
 std::string StatusController::GetStatus(const rapidjson::Document& document, const std::string& request)
@@ -145,6 +168,53 @@ std::string StatusController::GetStatus(const rapidjson::Document& document, con
 	return buffer.GetString();
 }
 
+std::string StatusController::GetCacheStatistics()
+{
+	auto statistics = m_cache.GetCacheStatistics();
+
+	static const int nanosecondsPerMillisecond = 1000000;
+	uint64_t totalGetStatusCalls;
+	uint64_t totalNanosecondsInGetStatus;
+	uint64_t minNanosecondsInGetStatus;
+	uint64_t maxNanosecondsInGetStatus;
+	{
+		ReadLock readLock{m_getStatusStatisticsMutex};
+		totalGetStatusCalls = m_totalGetStatusCalls;
+		totalNanosecondsInGetStatus = m_totalNanosecondsInGetStatus;
+		minNanosecondsInGetStatus = m_minNanosecondsInGetStatus;
+		maxNanosecondsInGetStatus = m_maxNanosecondsInGetStatus;
+	}
+	
+	auto averageNanosecondsInGetStatus = totalGetStatusCalls != 0 ? totalNanosecondsInGetStatus / totalGetStatusCalls : 0;
+	auto averageMillisecondsInGetStatus = static_cast<double>(averageNanosecondsInGetStatus) / nanosecondsPerMillisecond;
+	auto minMillisecondsInGetStatus = static_cast<double>(minNanosecondsInGetStatus) / nanosecondsPerMillisecond;
+	auto maxMillisecondsInGetStatus = static_cast<double>(maxNanosecondsInGetStatus) / nanosecondsPerMillisecond;
+
+	auto currentTime = boost::posix_time::second_clock::universal_time();
+	auto uptime = boost::posix_time::to_simple_string(currentTime - m_startTime);
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
+
+	writer.StartObject();
+	AddVersionToJson(writer);
+	AddStringToJson(writer, "Uptime", std::move(uptime));
+	AddUint64ToJson(writer, "TotalGetStatusRequests", totalGetStatusCalls);
+	AddDoubleToJson(writer, "AverageMillisecondsInGetStatus", averageMillisecondsInGetStatus);
+	AddDoubleToJson(writer, "MinimumMillisecondsInGetStatus", minMillisecondsInGetStatus);
+	AddDoubleToJson(writer, "MaximumMillisecondsInGetStatus", maxMillisecondsInGetStatus);
+	AddUint64ToJson(writer, "CacheHits",  statistics.CacheHits);
+	AddUint64ToJson(writer, "CacheMisses", statistics.CacheMisses);
+	AddUint64ToJson(writer, "EffectiveCachePrimes", statistics.CacheEffectivePrimeRequests);
+	AddUint64ToJson(writer, "TotalCachePrimes", statistics.CacheTotalPrimeRequests);
+	AddUint64ToJson(writer, "EffectiveCacheInvalidations", statistics.CacheEffectiveInvalidationRequests);
+	AddUint64ToJson(writer, "TotalCacheInvalidations", statistics.CacheTotalInvalidationRequests);
+	AddUint64ToJson(writer, "FullCacheInvalidations", statistics.CacheInvalidateAllRequests);
+	writer.EndObject();
+
+	return buffer.GetString();
+}
+
 std::string StatusController::Shutdown()
 {
 	Log("StatusController.Shutdown", Severity::Info) << R"(Shutting down due to client request.")";
@@ -180,7 +250,15 @@ std::string StatusController::HandleRequest(const std::string& request)
 	auto action = std::string(document["Action"].GetString());
 
 	if (boost::iequals(action, "GetStatus"))
-		return GetStatus(document, request);
+	{
+		boost::timer::cpu_timer timer;
+		auto result = GetStatus(document, request);
+		RecordGetStatusTime(timer.elapsed().wall);
+		return result;
+	}
+
+	if (boost::iequals(action, "GetCacheStatistics"))
+		return GetCacheStatistics();
 
 	if (boost::iequals(action, "Shutdown"))
 		return Shutdown();

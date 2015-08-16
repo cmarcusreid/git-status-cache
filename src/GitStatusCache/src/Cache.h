@@ -1,5 +1,6 @@
 #pragma once
 #include "Git.h"
+#include "CacheStatistics.h"
 
 /**
 * Simple cache that retrieves and stores git status information.
@@ -16,6 +17,14 @@ private:
 	Git m_git;
 	std::unordered_map<std::string, std::tuple<bool, Git::Status>> m_cache;
 	boost::shared_mutex m_cacheMutex;
+
+	std::atomic<uint64_t> m_cacheHits = 0;
+	std::atomic<uint64_t> m_cacheMisses = 0;
+	std::atomic<uint64_t> m_cacheEffectivePrimeRequests = 0;
+	std::atomic<uint64_t> m_cacheTotalPrimeRequests = 0;
+	std::atomic<uint64_t> m_cacheEffectiveInvalidationRequests = 0;
+	std::atomic<uint64_t> m_cacheTotalInvalidationRequests = 0;
+	std::atomic<uint64_t> m_cacheInvalidateAllRequests = 0;
 
 public:
 	/**
@@ -38,4 +47,9 @@ public:
 	* Invalidates all cached git status information.
 	*/
 	void InvalidateAllCacheEntries();
+
+	/**
+	 * Returns information about cache's performance.
+	 */
+	CacheStatistics GetCacheStatistics();
 };
