@@ -125,13 +125,23 @@ VOID CALLBACK CReadChangesRequest::NotificationCompletion(
 		return;
 	}
 
+	// No bytes indicates error, but can occur with success error code.
+	// Observed when debugging notification handler and changes were backed up.
+	if (!dwNumberOfBytesTransfered)
+	{
+		_ASSERTE(dwErrorCode == ERROR_SUCCESS);
+		if (dwErrorCode == ERROR_SUCCESS)
+		{
+			pBlock->BeginRead();
+			pBlock->NotifyEventsLost();
+		}
+
+		return;
+	}
+
 	// Can't use sizeof(FILE_NOTIFY_INFORMATION) because
 	// the structure is padded to 16 bytes.
 	_ASSERTE(dwNumberOfBytesTransfered >= offsetof(FILE_NOTIFY_INFORMATION, FileName) + sizeof(WCHAR));
-
-	// This might mean overflow? Not sure.
-	if(!dwNumberOfBytesTransfered)
-		return;
 
 	pBlock->BackupBuffer(dwNumberOfBytesTransfered);
 
@@ -141,6 +151,12 @@ VOID CALLBACK CReadChangesRequest::NotificationCompletion(
 	pBlock->BeginRead();
 
 	pBlock->ProcessNotification();
+}
+
+void CReadChangesRequest::NotifyEventsLost()
+{
+	auto path = ExpandFilename(m_wstrDirectory);
+	m_pServer->m_pBase->Push(m_token, FILE_ACTION_CHANGES_LOST, path);
 }
 
 void CReadChangesRequest::ProcessNotification()
@@ -157,19 +173,7 @@ void CReadChangesRequest::ProcessNotification()
 		auto path = boost::filesystem::path(static_cast<LPCWSTR>(m_wstrDirectory));
 		path.append(static_cast<LPCWSTR>(wstrFilename));
 		wstrFilename = path.c_str();
-
-		// If it could be a short filename, expand it.
-		LPCWSTR wszFilename = PathFindFileNameW(wstrFilename);
-		int len = lstrlenW(wszFilename);
-		// The maximum length of an 8.3 filename is twelve, including the dot.
-		if (len <= 12 && wcschr(wszFilename, L'~'))
-		{
-			// Convert to the long filename form. Unfortunately, this
-			// does not work for deletions, so it's an imperfect fix.
-			wchar_t wbuf[MAX_PATH];
-			if (::GetLongPathName(wstrFilename, wbuf, _countof (wbuf)) > 0)
-				wstrFilename = wbuf;
-		}
+		wstrFilename = ExpandFilename(wstrFilename);
 
 		m_pServer->m_pBase->Push(m_token, fni.Action, wstrFilename);
 
@@ -177,6 +181,24 @@ void CReadChangesRequest::ProcessNotification()
 			break;
 		pBase += fni.NextEntryOffset;
 	};
+}
+
+/*static*/ ATL::CStringW CReadChangesRequest::ExpandFilename(const ATL::CStringW& wstrFilename)
+{
+	// If it could be a short filename, expand it.
+	LPCWSTR wszFilename = PathFindFileNameW(wstrFilename);
+	int len = lstrlenW(wszFilename);
+	// The maximum length of an 8.3 filename is twelve, including the dot.
+	if (len <= 12 && wcschr(wszFilename, L'~'))
+	{
+		// Convert to the long filename form. Unfortunately, this
+		// does not work for deletions, so it's an imperfect fix.
+		wchar_t wbuf[MAX_PATH];
+		if (::GetLongPathName(wstrFilename, wbuf, _countof(wbuf)) > 0)
+			return ATL::CStringW{wbuf};
+	}
+
+	return wstrFilename;
 }
 
 }

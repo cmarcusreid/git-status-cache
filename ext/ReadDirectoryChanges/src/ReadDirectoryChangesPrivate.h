@@ -56,6 +56,8 @@ public:
 		memcpy(&m_BackupBuffer[0], &m_Buffer[0], dwSize);
 	}
 
+	void NotifyEventsLost();
+
 	void ProcessNotification();
 
 	void RequestTermination()
@@ -73,6 +75,8 @@ protected:
 			DWORD dwErrorCode,							// completion code
 			DWORD dwNumberOfBytesTransfered,			// number of bytes transferred
 			LPOVERLAPPED lpOverlapped);					// I/O information buffer
+
+	static ATL::CStringW ExpandFilename(const ATL::CStringW& wstrFilename);
 
 	// Parameters from the caller for ReadDirectoryChangesW().
 	DWORD		m_dwFlags;

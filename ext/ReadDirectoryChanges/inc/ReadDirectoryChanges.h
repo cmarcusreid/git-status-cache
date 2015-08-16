@@ -31,7 +31,8 @@
 
 #include "ThreadSafeQueue.h"
 
-typedef std::tuple<UINT32, DWORD,CStringW> TDirectoryChangeNotification;
+static const DWORD FILE_ACTION_CHANGES_LOST = 0x009402006;
+typedef std::tuple<UINT32, DWORD, CStringW> TDirectoryChangeNotification;
 
 namespace ReadDirectoryChangesPrivate
 {

@@ -24,7 +24,8 @@ void DirectoryMonitor::WaitForNotifications()
 			{
 				Log("DirectoryMonitor.Notification.Overflow", Severity::Warning)
 					<< "Change notification queue overflowed. Notifications were lost.";
-				m_onEventsLostCallback();
+				if (m_onEventsLostCallback != nullptr)
+					m_onEventsLostCallback();
 			}
 			else
 			{
@@ -33,6 +34,7 @@ void DirectoryMonitor::WaitForNotifications()
 				std::wstring path;
 				m_readDirectoryChanges.Pop(token, action, path);
 
+				bool shouldCallOnChangeCallback = true;
 				auto fileAction = DirectoryMonitor::FileAction::Unknown;
 				switch (action)
 				{
@@ -65,9 +67,16 @@ void DirectoryMonitor::WaitForNotifications()
 						<< R"(Renamed file. { "token": )" << token << R"(, "newPath": ")" << path << R"(" })";
 					fileAction = DirectoryMonitor::FileAction::RenamedTo;
 					break;
+				case FILE_ACTION_CHANGES_LOST:
+					Log("DirectoryMonitor.Notification.EventsLost", Severity::Warning)
+						<< R"(Notifications lost. { "token": )" << token << R"(, "path": ")" << path << R"(" })";
+					if (m_onEventsLostCallback != nullptr)
+						m_onEventsLostCallback();
+					shouldCallOnChangeCallback = false;
+					break;
 				}
 
-				if (m_onChangeCallback != nullptr)
+				if (m_onChangeCallback != nullptr && shouldCallOnChangeCallback)
 					m_onChangeCallback(token, boost::filesystem::path(path), fileAction);
 			}
 		}
