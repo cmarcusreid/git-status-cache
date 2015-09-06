@@ -7,6 +7,13 @@
 class Git
 {
 public:
+	struct Stash
+	{
+		uint64_t Index;
+		std::string Sha1Id;
+		std::string Message;
+	};
+
 	struct Status
 	{
 		std::string RepositoryPath;
@@ -33,6 +40,8 @@ public:
 
 		std::vector<std::string> Ignored;
 		std::vector<std::string> Conflicted;
+
+		std::vector<Stash> Stashes;
 	};
 
 private:
@@ -81,6 +90,11 @@ private:
 	 * Retrieves file add/modify/delete statistics and updates status.
 	 */
 	bool GetFileStatus(Status& status, UniqueGitRepository& repository);
+
+	/**
+	 * Retrieves information about stashes and updates status.
+	 */
+	bool GetStashList(Status& status, UniqueGitRepository& repository);
 
 public:
 	Git();

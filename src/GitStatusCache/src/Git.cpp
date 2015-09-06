@@ -443,6 +443,42 @@ bool Git::GetFileStatus(Git::Status& status, UniqueGitRepository& repository)
 	return true;
 }
 
+bool Git::GetStashList(Status& status, UniqueGitRepository& repository)
+{
+	std::vector<Stash> stashes;
+	auto result = git_stash_foreach(
+		repository.get(),
+		[](size_t index, const char* message, const git_oid *stash_id, void *payload)
+		{
+			if (payload == nullptr)
+				return -1;
+
+			char hashBuffer[40] = { 0 };
+			Stash stash;
+			stash.Sha1Id = std::string(git_oid_tostr(hashBuffer, _countof(hashBuffer), stash_id));
+			stash.Index = index;
+			stash.Message = std::string(message);
+
+			auto payloadAsStashes = reinterpret_cast<std::vector<Stash>*>(payload);
+			payloadAsStashes->emplace_back(std::move(stash));
+			return 0;
+		},
+		&stashes);
+
+	if (result != GIT_OK)
+	{
+		auto lastError = giterr_last();
+		Log("Git.GetStashList.FailedToRetrieveStashList", Severity::Error)
+			<< R"(Failed to retrieve stash list. { "repositoryPath": ")" << status.RepositoryPath
+			<< R"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
+			<< R"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << R"(" })";
+		return false;
+	}
+
+	status.Stashes = std::move(stashes);
+	return true;
+}
+
 std::tuple<bool, std::string> Git::DiscoverRepository(const std::string& path)
 {
 	Git::Status status;
@@ -486,6 +522,7 @@ std::tuple<bool, Git::Status> Git::GetStatus(const std::string& path)
 	Git::GetWorkingDirectory(status, repository);
 	Git::GetRepositoryState(status, repository);
 	Git::GetRefStatus(status, repository);
+	Git::GetStashList(status, repository);
 	if (!Git::GetFileStatus(status, repository))
 		return std::make_tuple(false, Git::Status());
 

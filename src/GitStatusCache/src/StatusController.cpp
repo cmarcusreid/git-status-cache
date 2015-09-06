@@ -163,6 +163,24 @@ std::string StatusController::GetStatus(const rapidjson::Document& document, con
 	AddArrayToJson(writer, "Ignored", statusToReport.Ignored);
 	AddArrayToJson(writer, "Conflicted", statusToReport.Conflicted);
 
+	writer.String("Stashes");
+	writer.StartArray();
+	for (const auto& value : statusToReport.Stashes)
+	{
+		writer.StartObject();
+		writer.String("Name");
+		std::string name = "stash@{";
+		name += std::to_string(value.Index);
+		name += "}";
+		writer.String(name.c_str());
+		writer.String("Sha1Id");
+		writer.String(value.Sha1Id.c_str());
+		writer.String("Message");
+		writer.String(value.Message.c_str());
+		writer.EndObject();
+	}
+	writer.EndArray();
+
 	writer.EndObject();
 
 	return buffer.GetString();
