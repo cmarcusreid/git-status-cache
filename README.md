@@ -51,6 +51,16 @@ Retrieves current status information for the requested "Path".
 		"WorkingUnreadable": [],
 		"Ignored": [],
 		"Conflicted": []
+		"Stashes" : [{
+				"Name" : "stash@{0}",
+				"Sha1Id" : "e24d59d0d03a3f680def647a7bb62f027d8671c",
+				"Message" : "On master: Second stash!"
+			}, {
+				"Name" : "stash@{1}",
+				"Sha1Id" : "0cbabd043bae55a76c3c041e6db2b129a0a4872",
+				"Message" : "On master: My stash."
+			}
+		]
 	}
 
 ### GetCacheStatistics ###
