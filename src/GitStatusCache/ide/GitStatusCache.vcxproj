@@ -59,6 +59,7 @@
       <AdditionalIncludeDirectories>$(BOOST_ROOT);$(SolutionDir)\..\ext\libgit2\include;$(SolutionDir)\..\ext\rapidjson\include;$(SolutionDir)\..\ext\ReadDirectoryChanges\inc;$(SolutionDir)\..\ext\ScopedResource\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -78,6 +79,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(BOOST_ROOT);$(SolutionDir)\..\ext\libgit2\include;$(SolutionDir)\..\ext\rapidjson\include;$(SolutionDir)\..\ext\ReadDirectoryChanges\inc;$(SolutionDir)\..\ext\ScopedResource\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
