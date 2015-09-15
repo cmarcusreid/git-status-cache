@@ -197,7 +197,7 @@ Visual Studio project requires BOOST_ROOT variable be set to the location of Boo
 > If you wish to build from source with Visual C++, you can use a simple build procedure described in this section. Open the command prompt and change your current directory to the Boost root directory. Then, type the following commands:
 >
     bootstrap
-    .\b2
+    .\b2 runtime-link=static
 
 #### libgit2 ####
 
@@ -210,7 +210,7 @@ CMake is required to build. See libgit2 [build instructions](https://libgit2.git
 	cd .\ext\libgit2
 	mkdir build
 	cd build
-	cmake .. -DBUILD_SHARED_LIBS=OFF -DSTATIC_CRT=OFF -DTHREADSAFE=ON
+	cmake .. -DBUILD_SHARED_LIBS=OFF -DSTATIC_CRT=ON -DTHREADSAFE=ON
 	cmake --build . --config Debug
 	cmake --build . --config Release
 
