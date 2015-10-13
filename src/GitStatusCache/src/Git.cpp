@@ -422,10 +422,26 @@ bool Git::GetFileStatus(Git::Status& status, UniqueGitRepository& repository)
 		static const auto conflictIgnoreFlags = GIT_STATUS_IGNORED | GIT_STATUS_CONFLICTED;
 		if ((entry->status & conflictIgnoreFlags) != 0)
 		{
-			auto hasOldPath = entry->index_to_workdir->old_file.path != nullptr;
-			auto hasNewPath = entry->index_to_workdir->new_file.path != nullptr;
-			auto oldPath = hasOldPath ? entry->index_to_workdir->old_file.path : std::string();
-			auto newPath = hasNewPath ? entry->index_to_workdir->new_file.path : std::string();
+			// libgit2 reports a subset of conflicts as two separate status entries with identical paths.
+			// One entry contains index_to_workdir and the other contains head_to_index.
+			auto hasOldPath = false;
+			auto hasNewPath = false;
+			auto oldPath = std::string();
+			auto newPath = std::string();
+			if (entry->index_to_workdir != nullptr)
+			{
+				hasOldPath = entry->index_to_workdir->old_file.path != nullptr;
+				hasNewPath = entry->index_to_workdir->new_file.path != nullptr;
+				oldPath = hasOldPath ? entry->index_to_workdir->old_file.path : std::string();
+				newPath = hasNewPath ? entry->index_to_workdir->new_file.path : std::string();
+			}
+			else if (entry->head_to_index != nullptr)
+			{
+				hasOldPath = entry->head_to_index->old_file.path != nullptr;
+				hasNewPath = entry->head_to_index->new_file.path != nullptr;
+				oldPath = hasOldPath ? entry->head_to_index->old_file.path : std::string();
+				newPath = hasNewPath ? entry->head_to_index->new_file.path : std::string();
+			}
 
 			std::string path;
 			if (hasOldPath && hasNewPath && oldPath == newPath)
@@ -434,9 +450,15 @@ bool Git::GetFileStatus(Git::Status& status, UniqueGitRepository& repository)
 				path = hasOldPath ? oldPath : newPath;
 
 			if ((entry->status & GIT_STATUS_IGNORED) == GIT_STATUS_IGNORED)
-				status.Ignored.push_back(path);
+			{
+				if (std::find(status.Ignored.begin(), status.Ignored.end(), path) == status.Ignored.end())
+					status.Ignored.push_back(path);
+			}
 			if ((entry->status & GIT_STATUS_CONFLICTED) == GIT_STATUS_CONFLICTED)
-				status.Conflicted.push_back(path);
+			{
+				if (std::find(status.Conflicted.begin(), status.Conflicted.end(), path) == status.Conflicted.end())
+					status.Conflicted.push_back(path);
+			}
 		}
 	}
 
