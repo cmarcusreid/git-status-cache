@@ -23,6 +23,11 @@ private:
 	boost::shared_mutex m_tokensToRepositoriesMutex;
 
 	/**
+	* Checks if the file change can be safely ignored.
+	*/
+	static bool ShouldIgnoreFileChange(const boost::filesystem::path& path);
+
+	/**
 	* Handles file change notifications by invalidating cache entries and scheduling priming.
 	*/
 	void OnFileChanged(DirectoryMonitor::Token token, const boost::filesystem::path& path, DirectoryMonitor::FileAction action);
