@@ -38,6 +38,13 @@ void CacheInvalidator::MonitorRepositoryDirectories(const Git::Status& status)
 
 void CacheInvalidator::OnFileChanged(DirectoryMonitor::Token token, const boost::filesystem::path& path, DirectoryMonitor::FileAction action)
 {
+	if (CacheInvalidator::ShouldIgnoreFileChange(path))
+	{
+		Log("CacheInvalidator.OnFileChanged.IgnoringFileChange", Severity::Spam)
+			<< R"(Ignoring file change. { "filePath": ")" << path.c_str() << R"(" })";
+		return;
+	}
+
 	std::string repositoryPath;
 	{
 		ReadLock readLock(m_tokensToRepositoriesMutex);
@@ -61,4 +68,13 @@ void CacheInvalidator::OnFileChanged(DirectoryMonitor::Token token, const boost:
 	}
 
 	m_cachePrimer.SchedulePrimingForRepositoryPathInFiveSeconds(repositoryPath);
+}
+
+/*static*/ bool CacheInvalidator::ShouldIgnoreFileChange(const boost::filesystem::path& path)
+{
+	if (!path.has_filename())
+		return false;
+
+	auto filename = path.filename();
+	return filename.wstring() == L"index.lock" || filename.wstring() == L".git";
 }
