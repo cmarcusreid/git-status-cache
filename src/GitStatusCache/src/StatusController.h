@@ -34,6 +34,11 @@ private:
 	static void AddStringToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, std::string&& value);
 
 	/**
+	* Adds bool to JSON response.
+	*/
+	static void AddBoolToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, bool value);
+
+	/**
 	* Adds uint32_t to JSON response.
 	*/
 	static void AddUintToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, uint32_t value);

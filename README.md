@@ -36,6 +36,7 @@ Retrieves current status information for the requested "Path".
 		"State" : "",
 		"Branch" : "master",
 		"Upstream": "origin/master",
+		"UpstreamGone": false,
 		"AheadBy": 0,
 		"BehindBy": 0,
 		"IndexAdded": [],

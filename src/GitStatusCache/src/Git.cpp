@@ -221,6 +221,7 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	status.Upstream = std::string();
 	status.AheadBy = 0;
 	status.BehindBy = 0;
+	status.UpstreamGone = false;
 
 	auto head = MakeUniqueGitReference(nullptr);
 	auto result = git_repository_head(&head.get(), repository.get());
@@ -270,6 +271,20 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 		Log("Git.GetRefStatus.NoUpstream", Severity::Spam)
 			<< R"(Branch does not have a remote tracking reference. { "repositoryPath": ")" << status.RepositoryPath
 			<< R"(", "localBranch": ")" << status.Branch << R"(" })";
+
+		auto upstreamName = git_buf{ 0 };
+		result = git_branch_upstream_remote(
+			&upstreamName,
+			git_reference_owner(head.get()),
+			git_reference_name(head.get()));
+		if (result == GIT_OK)
+		{
+			Log("Git.GetRefStatus.UpstreamGone", Severity::Spam)
+				<< R"(Branch has a configured upstream that is gone. { "repositoryPath": ")" << status.RepositoryPath
+				<< R"(", "localBranch": ")" << status.Branch << R"(" })";
+			status.UpstreamGone = true;
+		}
+
 		return true;
 	}
 	else if (result != GIT_OK)
