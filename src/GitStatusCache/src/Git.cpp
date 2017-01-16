@@ -268,12 +268,6 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	result = git_branch_upstream(&upstream.get(), head.get());
 	if (result == GIT_ENOTFOUND)
 	{
-		auto upstreamRemoteName = git_buf{ 0 };
-		auto upstreamRemoteResult = git_branch_upstream_remote(
-			&upstreamRemoteName,
-			git_reference_owner(head.get()),
-			git_reference_name(head.get()));
-
 		auto upstreamBranchName = git_buf{ 0 };
 		auto upstreamBranchResult = git_branch_upstream_name(
 			&upstreamBranchName,
@@ -281,7 +275,7 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 			git_reference_name(head.get()));
 
 		auto canBuildUpstream = false;
-		if (upstreamRemoteResult == GIT_OK && upstreamBranchResult == GIT_OK)
+		if (upstreamBranchResult == GIT_OK)
 		{
 			Log("Git.GetRefStatus.UpstreamGone", Severity::Spam)
 				<< R"(Branch has a configured upstream that is gone. { "repositoryPath": ")" << status.RepositoryPath
