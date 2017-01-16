@@ -219,9 +219,9 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 {
 	status.Branch = std::string();
 	status.Upstream = std::string();
+	status.UpstreamGone = false;
 	status.AheadBy = 0;
 	status.BehindBy = 0;
-	status.UpstreamGone = false;
 
 	auto head = MakeUniqueGitReference(nullptr);
 	auto result = git_repository_head(&head.get(), repository.get());
@@ -268,21 +268,44 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	result = git_branch_upstream(&upstream.get(), head.get());
 	if (result == GIT_ENOTFOUND)
 	{
-		Log("Git.GetRefStatus.NoUpstream", Severity::Spam)
-			<< R"(Branch does not have a remote tracking reference. { "repositoryPath": ")" << status.RepositoryPath
-			<< R"(", "localBranch": ")" << status.Branch << R"(" })";
-
-		auto upstreamName = git_buf{ 0 };
-		result = git_branch_upstream_remote(
-			&upstreamName,
+		auto upstreamRemoteName = git_buf{ 0 };
+		auto upstreamRemoteResult = git_branch_upstream_remote(
+			&upstreamRemoteName,
 			git_reference_owner(head.get()),
 			git_reference_name(head.get()));
-		if (result == GIT_OK)
+
+		auto upstreamBranchName = git_buf{ 0 };
+		auto upstreamBranchResult = git_branch_upstream_name(
+			&upstreamBranchName,
+			git_reference_owner(head.get()),
+			git_reference_name(head.get()));
+
+		auto canBuildUpstream = false;
+		if (upstreamRemoteResult == GIT_OK && upstreamBranchResult == GIT_OK)
 		{
 			Log("Git.GetRefStatus.UpstreamGone", Severity::Spam)
 				<< R"(Branch has a configured upstream that is gone. { "repositoryPath": ")" << status.RepositoryPath
 				<< R"(", "localBranch": ")" << status.Branch << R"(" })";
 			status.UpstreamGone = true;
+			canBuildUpstream = upstreamBranchName.ptr != nullptr && upstreamBranchName.size != 0;
+		}
+
+		if (canBuildUpstream)
+		{
+			const auto patternToRemove = std::string("refs/remotes/");
+			auto upstreamName = std::string(upstreamBranchName.ptr);
+			auto patternPosition = upstreamName.find(patternToRemove);
+			if (patternPosition == 0 && upstreamName.size() > patternToRemove.size())
+			{
+				upstreamName.erase(patternPosition, patternToRemove.size());
+			}
+			status.Upstream = upstreamName;
+		}
+		else
+		{
+			Log("Git.GetRefStatus.NoUpstream", Severity::Spam)
+				<< R"(Branch does not have a remote tracking reference. { "repositoryPath": ")" << status.RepositoryPath
+				<< R"(", "localBranch": ")" << status.Branch << R"(" })";
 		}
 
 		return true;
