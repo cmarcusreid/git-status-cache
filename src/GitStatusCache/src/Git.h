@@ -22,6 +22,7 @@ public:
 
 		std::string Branch;
 		std::string Upstream;
+		bool UpstreamGone = false;
 		int AheadBy = 0;
 		int BehindBy = 0;
 

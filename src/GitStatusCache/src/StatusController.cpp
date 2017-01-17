@@ -31,6 +31,12 @@ StatusController::~StatusController()
 	writer.String(value.c_str());
 }
 
+/*static*/ void StatusController::AddBoolToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, bool value)
+{
+	writer.String(name.c_str());
+	writer.Bool(value);
+}
+
 /*static*/ void StatusController::AddUintToJson(rapidjson::Writer<rapidjson::StringBuffer>& writer, std::string&& name, uint32_t value)
 {
 	writer.String(name.c_str());
@@ -122,6 +128,7 @@ std::string StatusController::GetStatus(const rapidjson::Document& document, con
 	AddStringToJson(writer, "State", statusToReport.State.c_str());
 	AddStringToJson(writer, "Branch", statusToReport.Branch.c_str());
 	AddStringToJson(writer, "Upstream", statusToReport.Upstream.c_str());
+	AddBoolToJson(writer, "UpstreamGone", statusToReport.UpstreamGone);
 	AddUintToJson(writer, "AheadBy", statusToReport.AheadBy);
 	AddUintToJson(writer, "BehindBy", statusToReport.BehindBy);
 
