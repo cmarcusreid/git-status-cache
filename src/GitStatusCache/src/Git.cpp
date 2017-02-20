@@ -264,7 +264,7 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	}
 
 	auto upstream = MakeUniqueGitReference(nullptr);
-	result = LogExecutionTime("Git.GetRefStatus.Timing", git_branch_upstream(&upstream.get(), head.get()));
+	result = LogExecutionTime("Git.GetRefStatus", git_branch_upstream(&upstream.get(), head.get()));
 	if (result == GIT_ENOTFOUND)
 	{
 		auto upstreamBranchName = git_buf{ 0 };
