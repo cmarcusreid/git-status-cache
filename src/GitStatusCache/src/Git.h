@@ -93,6 +93,11 @@ private:
 	bool GetFileStatus(Status& status, UniqueGitRepository& repository);
 
 	/**
+	 * Helper to process status of individual file.
+	 */
+	bool ProcessStatusEntry(Status& status, const git_status_entry* entry);
+
+	/**
 	 * Retrieves information about stashes and updates status.
 	 */
 	bool GetStashList(Status& status, UniqueGitRepository& repository);

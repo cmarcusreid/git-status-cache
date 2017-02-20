@@ -76,12 +76,12 @@ std::string ConvertErrorCodeToString(git_error_code errorCode)
 
 Git::Git()
 {
-	git_libgit2_init();
+	LogExecutionTime("Git.ctor", git_libgit2_init());
 }
 
 Git::~Git()
 {
-	git_libgit2_shutdown();
+	LogExecutionTime("Git.dtor", git_libgit2_shutdown());
 }
 
 bool Git::DiscoverRepository(Git::Status& status, const std::string& path)
@@ -89,16 +89,14 @@ bool Git::DiscoverRepository(Git::Status& status, const std::string& path)
 	status.RepositoryPath = std::string();
 
 	auto repositoryPath = MakeUniqueGitBuffer(git_buf{ 0 });
-	auto result = git_repository_discover(
-		&repositoryPath.get(),
-		path.c_str(),
-		true /*across_fs*/,
-		nullptr /*ceiling_dirs*/);
+	auto result = LogExecutionTime(
+		"Git.DiscoverRepository",
+		git_repository_discover(&repositoryPath.get(), path.c_str(), true /*across_fs*/, nullptr /*ceiling_dirs*/));
 
 	if (result != GIT_OK)
 	{
 		auto lastError = giterr_last();
-		Log("Git.GetRefStatus.FailedToDiscoverRepository", Severity::Warning)
+		Log("Git.DiscoverRepository.FailedToDiscoverRepository", Severity::Warning)
 			<< R"(Failed to open repository. { "path: ")" << path
 			<< R"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
 			<< R"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << R"(" })";
@@ -113,7 +111,7 @@ bool Git::GetWorkingDirectory(Git::Status& status, UniqueGitRepository& reposito
 {
 	status.WorkingDirectory = std::string();
 
-	auto path = git_repository_workdir(repository.get());
+	auto path = LogExecutionTime("Git.GetWorkingDirectory", git_repository_workdir(repository.get()));
 	if (path == NULL)
 	{
 		auto lastError = giterr_last();
@@ -131,7 +129,8 @@ bool Git::GetRepositoryState(Git::Status& status, UniqueGitRepository& repositor
 {
 	status.State = std::string();
 
-	auto state = git_repository_state(repository.get());
+	auto state = LogExecutionTime("Git.GetRepositoryState", git_repository_state(repository.get()));
+
 	switch (state)
 	{
 	default:
@@ -140,7 +139,7 @@ bool Git::GetRepositoryState(Git::Status& status, UniqueGitRepository& repositor
 			<< R"(", "state": ")" << state << R"(" })";
 		return false;
 	case GIT_REPOSITORY_STATE_NONE:
-		if (git_repository_head_detached(repository.get()))
+		if (LogExecutionTime("Git.GetRepositoryState", git_repository_head_detached(repository.get())))
 			status.State = std::string("DETACHED");
 		return true;
 	case GIT_REPOSITORY_STATE_MERGE:
@@ -224,7 +223,7 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	status.BehindBy = 0;
 
 	auto head = MakeUniqueGitReference(nullptr);
-	auto result = git_repository_head(&head.get(), repository.get());
+	auto result = LogExecutionTime("Git.GetRefStatus", git_repository_head(&head.get(), repository.get()));
 	if (result == GIT_EUNBORNBRANCH)
 	{
 		Log("Git.GetRefStatus.UnbornBranch", Severity::Verbose)
@@ -248,31 +247,30 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 		return false;
 	}
 
-	status.Branch = std::string(git_reference_shorthand(head.get()));
+	status.Branch = std::string(LogExecutionTime("Git.GetRefStatus", git_reference_shorthand(head.get())));
 	if (status.Branch == "HEAD")
 	{
 		if (status.State == "DETACHED")
 		{
-			SetBranchToCurrentCommit(status);
+			LogExecutionTime("Git.GetRefStatus", SetBranchToCurrentCommit(status));
 		}
 		else
 		{
-			if (!SetBranchFromRebaseApplyHeadName(status))
-				SetBranchFromRebaseMergeHeadName(status);
+			if (!LogExecutionTime("Git.GetRefStatus", SetBranchFromRebaseApplyHeadName(status)))
+				LogExecutionTime("Git.GetRefStatus", SetBranchFromRebaseMergeHeadName(status));
 		}
 
 		return true;
 	}
 
 	auto upstream = MakeUniqueGitReference(nullptr);
-	result = git_branch_upstream(&upstream.get(), head.get());
+	result = LogExecutionTime("Git.GetRefStatus.Timing", git_branch_upstream(&upstream.get(), head.get()));
 	if (result == GIT_ENOTFOUND)
 	{
 		auto upstreamBranchName = git_buf{ 0 };
-		auto upstreamBranchResult = git_branch_upstream_name(
-			&upstreamBranchName,
-			git_reference_owner(head.get()),
-			git_reference_name(head.get()));
+		auto upstreamBranchResult = LogExecutionTime(
+			"Git.GetRefStatus",
+			git_branch_upstream_name(&upstreamBranchName, git_reference_owner(head.get()), git_reference_name(head.get())));
 
 		auto canBuildUpstream = false;
 		if (upstreamBranchResult == GIT_OK)
@@ -315,9 +313,9 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 		return false;
 	}
 
-	status.Upstream = std::string(git_reference_shorthand(upstream.get()));
+	status.Upstream = std::string(LogExecutionTime("Git.GetRefStatus", git_reference_shorthand(upstream.get())));
 
-	auto localTarget = git_reference_target(head.get());
+	auto localTarget = LogExecutionTime("Git.GetRefStatus", git_reference_target(head.get()));
 	if (localTarget == nullptr)
 	{
 		auto lastError = giterr_last();
@@ -329,7 +327,7 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 		return false;
 	}
 
-	auto upstreamTarget = git_reference_target(upstream.get());
+	auto upstreamTarget = LogExecutionTime("Git.GetRefStatus", git_reference_target(upstream.get()));
 	if (upstreamTarget == nullptr)
 	{
 		auto lastError = giterr_last();
@@ -342,7 +340,10 @@ bool Git::GetRefStatus(Git::Status& status, UniqueGitRepository& repository)
 	}
 
 	size_t aheadBy, behindBy;
-	result = git_graph_ahead_behind(&aheadBy, &behindBy, repository.get(), localTarget, upstreamTarget);
+	result = LogExecutionTime(
+		"Git.GetRefStatus",
+		git_graph_ahead_behind(&aheadBy, &behindBy, repository.get(), localTarget, upstreamTarget));
+
 	if (result != GIT_OK)
 	{
 		auto lastError = giterr_last();
@@ -371,126 +372,136 @@ bool Git::GetFileStatus(Git::Status& status, UniqueGitRepository& repository)
 		| GIT_STATUS_OPT_EXCLUDE_SUBMODULES;
 
 	auto statusList = MakeUniqueGitStatusList(nullptr);
-	auto result = git_status_list_new(&statusList.get(), repository.get(), &statusOptions);
+	auto result = LogExecutionTime(
+		"Git.GetFileStatus",
+		git_status_list_new(&statusList.get(), repository.get(), &statusOptions));
+
 	if (result != GIT_OK)
 	{
 		auto lastError = giterr_last();
-		Log("Git.GetGitStatus.FailedToCreateStatusList", Severity::Error)
+		Log("Git.GetFileStatus.FailedToCreateStatusList", Severity::Error)
 			<< R"(Failed to create status list. { "repositoryPath": ")" << status.RepositoryPath
 			<< R"(", "result": ")" << ConvertErrorCodeToString(static_cast<git_error_code>(result))
 			<< R"(", "lastError": ")" << (lastError == nullptr ? "null" : lastError->message) << R"(" })";
 		return false;
 	}
 
-	for (auto i = size_t{ 0 }; i < git_status_list_entrycount(statusList.get()); ++i)
+	auto statusListCount = git_status_list_entrycount(statusList.get());
+	for (auto i = size_t{ 0 }; i < statusListCount; ++i)
 	{
 		auto entry = git_status_byindex(statusList.get(), i);
+		LogExecutionTime("Git.GetFileStatus", ProcessStatusEntry(status, entry));
+	}
 
-		static const auto indexFlags =
-			GIT_STATUS_INDEX_NEW
-			| GIT_STATUS_INDEX_MODIFIED
-			| GIT_STATUS_INDEX_DELETED
-			| GIT_STATUS_INDEX_RENAMED
-			| GIT_STATUS_INDEX_TYPECHANGE;
-		if ((entry->status & indexFlags) != 0)
+	return true;
+}
+
+bool Git::ProcessStatusEntry(Status& status, const git_status_entry* entry)
+{
+	static const auto indexFlags =
+		GIT_STATUS_INDEX_NEW
+		| GIT_STATUS_INDEX_MODIFIED
+		| GIT_STATUS_INDEX_DELETED
+		| GIT_STATUS_INDEX_RENAMED
+		| GIT_STATUS_INDEX_TYPECHANGE;
+	if ((entry->status & indexFlags) != 0)
+	{
+		auto hasOldPath = entry->head_to_index->old_file.path != nullptr;
+		auto hasNewPath = entry->head_to_index->new_file.path != nullptr;
+		auto oldPath = hasOldPath ? entry->head_to_index->old_file.path : std::string();
+		auto newPath = hasNewPath ? entry->head_to_index->new_file.path : std::string();
+
+		std::string path;
+		if (hasOldPath && hasNewPath && oldPath == newPath)
+			path = oldPath;
+		else
+			path = hasOldPath ? oldPath : newPath;
+
+		if ((entry->status & GIT_STATUS_INDEX_NEW) == GIT_STATUS_INDEX_NEW)
+			status.IndexAdded.push_back(path);
+		if ((entry->status & GIT_STATUS_INDEX_MODIFIED) == GIT_STATUS_INDEX_MODIFIED)
+			status.IndexModified.push_back(path);
+		if ((entry->status & GIT_STATUS_INDEX_DELETED) == GIT_STATUS_INDEX_DELETED)
+			status.IndexDeleted.push_back(path);
+		if ((entry->status & GIT_STATUS_INDEX_RENAMED) == GIT_STATUS_INDEX_RENAMED)
+			status.IndexRenamed.emplace_back(std::make_pair(oldPath, newPath));
+		if ((entry->status & GIT_STATUS_INDEX_TYPECHANGE) == GIT_STATUS_INDEX_TYPECHANGE)
+			status.IndexTypeChange.push_back(path);
+	}
+
+	static const auto workingFlags =
+		GIT_STATUS_WT_NEW
+		| GIT_STATUS_WT_MODIFIED
+		| GIT_STATUS_WT_DELETED
+		| GIT_STATUS_WT_TYPECHANGE
+		| GIT_STATUS_WT_RENAMED
+		| GIT_STATUS_WT_UNREADABLE;
+	if ((entry->status & workingFlags) != 0)
+	{
+		auto hasOldPath = entry->index_to_workdir->old_file.path != nullptr;
+		auto hasNewPath = entry->index_to_workdir->new_file.path != nullptr;
+		auto oldPath = hasOldPath ? entry->index_to_workdir->old_file.path : std::string();
+		auto newPath = hasNewPath ? entry->index_to_workdir->new_file.path : std::string();
+
+		std::string path;
+		if (hasOldPath && hasNewPath && oldPath == newPath)
+			path = oldPath;
+		else
+			path = hasOldPath ? oldPath : newPath;
+
+		if ((entry->status & GIT_STATUS_WT_NEW) == GIT_STATUS_WT_NEW)
+			status.WorkingAdded.push_back(path);
+		if ((entry->status & GIT_STATUS_WT_MODIFIED) == GIT_STATUS_WT_MODIFIED)
+			status.WorkingModified.push_back(path);
+		if ((entry->status & GIT_STATUS_WT_DELETED) == GIT_STATUS_WT_DELETED)
+			status.WorkingDeleted.push_back(path);
+		if ((entry->status & GIT_STATUS_WT_TYPECHANGE) == GIT_STATUS_WT_TYPECHANGE)
+			status.WorkingTypeChange.push_back(path);
+		if ((entry->status & GIT_STATUS_WT_RENAMED) == GIT_STATUS_WT_RENAMED)
+			status.WorkingRenamed.emplace_back(std::make_pair(oldPath, newPath));
+		if ((entry->status & GIT_STATUS_WT_UNREADABLE) == GIT_STATUS_WT_UNREADABLE)
+			status.WorkingUnreadable.push_back(path);
+	}
+
+	static const auto conflictIgnoreFlags = GIT_STATUS_IGNORED | GIT_STATUS_CONFLICTED;
+	if ((entry->status & conflictIgnoreFlags) != 0)
+	{
+		// libgit2 reports a subset of conflicts as two separate status entries with identical paths.
+		// One entry contains index_to_workdir and the other contains head_to_index.
+		auto hasOldPath = false;
+		auto hasNewPath = false;
+		auto oldPath = std::string();
+		auto newPath = std::string();
+		if (entry->index_to_workdir != nullptr)
 		{
-			auto hasOldPath = entry->head_to_index->old_file.path != nullptr;
-			auto hasNewPath = entry->head_to_index->new_file.path != nullptr;
-			auto oldPath = hasOldPath ? entry->head_to_index->old_file.path : std::string();
-			auto newPath = hasNewPath ? entry->head_to_index->new_file.path : std::string();
-
-			std::string path;
-			if (hasOldPath && hasNewPath && oldPath == newPath)
-				path = oldPath;
-			else
-				path = hasOldPath ? oldPath : newPath;
-
-			if ((entry->status & GIT_STATUS_INDEX_NEW) == GIT_STATUS_INDEX_NEW)
-				status.IndexAdded.push_back(path);
-			if ((entry->status & GIT_STATUS_INDEX_MODIFIED) == GIT_STATUS_INDEX_MODIFIED)
-				status.IndexModified.push_back(path);
-			if ((entry->status & GIT_STATUS_INDEX_DELETED) == GIT_STATUS_INDEX_DELETED)
-				status.IndexDeleted.push_back(path);
-			if ((entry->status & GIT_STATUS_INDEX_RENAMED) == GIT_STATUS_INDEX_RENAMED)
-				status.IndexRenamed.emplace_back(std::make_pair(oldPath, newPath));
-			if ((entry->status & GIT_STATUS_INDEX_TYPECHANGE) == GIT_STATUS_INDEX_TYPECHANGE)
-				status.IndexTypeChange.push_back(path);
+			hasOldPath = entry->index_to_workdir->old_file.path != nullptr;
+			hasNewPath = entry->index_to_workdir->new_file.path != nullptr;
+			oldPath = hasOldPath ? entry->index_to_workdir->old_file.path : std::string();
+			newPath = hasNewPath ? entry->index_to_workdir->new_file.path : std::string();
+		}
+		else if (entry->head_to_index != nullptr)
+		{
+			hasOldPath = entry->head_to_index->old_file.path != nullptr;
+			hasNewPath = entry->head_to_index->new_file.path != nullptr;
+			oldPath = hasOldPath ? entry->head_to_index->old_file.path : std::string();
+			newPath = hasNewPath ? entry->head_to_index->new_file.path : std::string();
 		}
 
-		static const auto workingFlags =
-			GIT_STATUS_WT_NEW
-			| GIT_STATUS_WT_MODIFIED
-			| GIT_STATUS_WT_DELETED
-			| GIT_STATUS_WT_TYPECHANGE
-			| GIT_STATUS_WT_RENAMED
-			| GIT_STATUS_WT_UNREADABLE;
-		if ((entry->status & workingFlags) != 0)
+		std::string path;
+		if (hasOldPath && hasNewPath && oldPath == newPath)
+			path = oldPath;
+		else
+			path = hasOldPath ? oldPath : newPath;
+
+		if ((entry->status & GIT_STATUS_IGNORED) == GIT_STATUS_IGNORED)
 		{
-			auto hasOldPath = entry->index_to_workdir->old_file.path != nullptr;
-			auto hasNewPath = entry->index_to_workdir->new_file.path != nullptr;
-			auto oldPath = hasOldPath ? entry->index_to_workdir->old_file.path : std::string();
-			auto newPath = hasNewPath ? entry->index_to_workdir->new_file.path : std::string();
-
-			std::string path;
-			if (hasOldPath && hasNewPath && oldPath == newPath)
-				path = oldPath;
-			else
-				path = hasOldPath ? oldPath : newPath;
-
-			if ((entry->status & GIT_STATUS_WT_NEW) == GIT_STATUS_WT_NEW)
-				status.WorkingAdded.push_back(path);
-			if ((entry->status & GIT_STATUS_WT_MODIFIED) == GIT_STATUS_WT_MODIFIED)
-				status.WorkingModified.push_back(path);
-			if ((entry->status & GIT_STATUS_WT_DELETED) == GIT_STATUS_WT_DELETED)
-				status.WorkingDeleted.push_back(path);
-			if ((entry->status & GIT_STATUS_WT_TYPECHANGE) == GIT_STATUS_WT_TYPECHANGE)
-				status.WorkingTypeChange.push_back(path);
-			if ((entry->status & GIT_STATUS_WT_RENAMED) == GIT_STATUS_WT_RENAMED)
-				status.WorkingRenamed.emplace_back(std::make_pair(oldPath, newPath));
-			if ((entry->status & GIT_STATUS_WT_UNREADABLE) == GIT_STATUS_WT_UNREADABLE)
-				status.WorkingUnreadable.push_back(path);
+			if (std::find(status.Ignored.begin(), status.Ignored.end(), path) == status.Ignored.end())
+				status.Ignored.push_back(path);
 		}
-
-		static const auto conflictIgnoreFlags = GIT_STATUS_IGNORED | GIT_STATUS_CONFLICTED;
-		if ((entry->status & conflictIgnoreFlags) != 0)
+		if ((entry->status & GIT_STATUS_CONFLICTED) == GIT_STATUS_CONFLICTED)
 		{
-			// libgit2 reports a subset of conflicts as two separate status entries with identical paths.
-			// One entry contains index_to_workdir and the other contains head_to_index.
-			auto hasOldPath = false;
-			auto hasNewPath = false;
-			auto oldPath = std::string();
-			auto newPath = std::string();
-			if (entry->index_to_workdir != nullptr)
-			{
-				hasOldPath = entry->index_to_workdir->old_file.path != nullptr;
-				hasNewPath = entry->index_to_workdir->new_file.path != nullptr;
-				oldPath = hasOldPath ? entry->index_to_workdir->old_file.path : std::string();
-				newPath = hasNewPath ? entry->index_to_workdir->new_file.path : std::string();
-			}
-			else if (entry->head_to_index != nullptr)
-			{
-				hasOldPath = entry->head_to_index->old_file.path != nullptr;
-				hasNewPath = entry->head_to_index->new_file.path != nullptr;
-				oldPath = hasOldPath ? entry->head_to_index->old_file.path : std::string();
-				newPath = hasNewPath ? entry->head_to_index->new_file.path : std::string();
-			}
-
-			std::string path;
-			if (hasOldPath && hasNewPath && oldPath == newPath)
-				path = oldPath;
-			else
-				path = hasOldPath ? oldPath : newPath;
-
-			if ((entry->status & GIT_STATUS_IGNORED) == GIT_STATUS_IGNORED)
-			{
-				if (std::find(status.Ignored.begin(), status.Ignored.end(), path) == status.Ignored.end())
-					status.Ignored.push_back(path);
-			}
-			if ((entry->status & GIT_STATUS_CONFLICTED) == GIT_STATUS_CONFLICTED)
-			{
-				if (std::find(status.Conflicted.begin(), status.Conflicted.end(), path) == status.Conflicted.end())
-					status.Conflicted.push_back(path);
-			}
+			if (std::find(status.Conflicted.begin(), status.Conflicted.end(), path) == status.Conflicted.end())
+				status.Conflicted.push_back(path);
 		}
 	}
 
@@ -500,25 +511,23 @@ bool Git::GetFileStatus(Git::Status& status, UniqueGitRepository& repository)
 bool Git::GetStashList(Status& status, UniqueGitRepository& repository)
 {
 	std::vector<Stash> stashes;
-	auto result = git_stash_foreach(
-		repository.get(),
-		[](size_t index, const char* message, const git_oid *stash_id, void *payload)
-		{
-			if (payload == nullptr)
-				return -1;
+	auto processGetStash = [](size_t index, const char* message, const git_oid *stash_id, void *payload)
+	{
+		if (payload == nullptr)
+			return -1;
 
-			char hashBuffer[40] = { 0 };
-			Stash stash;
-			stash.Sha1Id = std::string(git_oid_tostr(hashBuffer, _countof(hashBuffer), stash_id));
-			stash.Index = index;
-			stash.Message = std::string(message);
+		char hashBuffer[40] = { 0 };
+		Stash stash;
+		stash.Sha1Id = std::string(git_oid_tostr(hashBuffer, _countof(hashBuffer), stash_id));
+		stash.Index = index;
+		stash.Message = std::string(message);
 
-			auto payloadAsStashes = reinterpret_cast<std::vector<Stash>*>(payload);
-			payloadAsStashes->emplace_back(std::move(stash));
-			return 0;
-		},
-		&stashes);
+		auto payloadAsStashes = reinterpret_cast<std::vector<Stash>*>(payload);
+		payloadAsStashes->emplace_back(std::move(stash));
+		return 0;
+	};
 
+	auto result = LogExecutionTime("Git.GetStashList", git_stash_foreach(repository.get(), processGetStash, &stashes));
 	if (result != GIT_OK)
 	{
 		auto lastError = giterr_last();
@@ -544,17 +553,15 @@ std::tuple<bool, std::string> Git::DiscoverRepository(const std::string& path)
 std::tuple<bool, Git::Status> Git::GetStatus(const std::string& path)
 {
 	Git::Status status;
-	if (!Git::DiscoverRepository(status, path))
+	if (!LogExecutionTime("Git.GetStatus", Git::DiscoverRepository(status, path)))
 	{
 		return std::make_tuple(false, Git::Status());
 	}
 
 	auto repository = MakeUniqueGitRepository(nullptr);
-	auto result = git_repository_open_ext(
-		&repository.get(),
-		status.RepositoryPath.c_str(),
-		GIT_REPOSITORY_OPEN_NO_SEARCH,
-		nullptr);
+	auto result = LogExecutionTime(
+		"Git.GetStatus",
+		git_repository_open_ext(&repository.get(), status.RepositoryPath.c_str(), GIT_REPOSITORY_OPEN_NO_SEARCH, nullptr));
 
 	if (result != GIT_OK)
 	{
@@ -566,18 +573,18 @@ std::tuple<bool, Git::Status> Git::GetStatus(const std::string& path)
 		return std::make_tuple(false, Git::Status());
 	}
 
-	if (git_repository_is_bare(repository.get()))
+	if (LogExecutionTime("Git.GetStatus", git_repository_is_bare(repository.get())))
 	{
 		Log("Git.GetGitStatus.BareRepository", Severity::Warning)
 			<< R"(Aborting due to bare repository. { "repositoryPath": ")" << status.RepositoryPath << R"(" })";
 		return std::make_tuple(false, Git::Status());
 	}
 
-	Git::GetWorkingDirectory(status, repository);
-	Git::GetRepositoryState(status, repository);
-	Git::GetRefStatus(status, repository);
-	Git::GetStashList(status, repository);
-	if (!Git::GetFileStatus(status, repository))
+	LogExecutionTime("Git.GetStatus", Git::GetWorkingDirectory(status, repository));
+	LogExecutionTime("Git.GetStatus",Git::GetRepositoryState(status, repository));
+	LogExecutionTime("Git.GetStatus",Git::GetRefStatus(status, repository));
+	LogExecutionTime("Git.GetStatus",Git::GetStashList(status, repository));
+	if (!LogExecutionTime("Git.GetStatus", Git::GetFileStatus(status, repository)))
 		return std::make_tuple(false, Git::Status());
 
 	return std::make_tuple(true, std::move(status));

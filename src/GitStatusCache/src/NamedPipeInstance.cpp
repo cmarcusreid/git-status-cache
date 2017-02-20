@@ -7,7 +7,7 @@ void NamedPipeInstance::OnClientRequest()
 
 	while (true)
 	{
-		auto readResult = ReadRequest();
+		auto readResult = LogExecutionTime("NamedPipeInstance.OnClientRequest", ReadRequest());
 		if (readResult.first != IoResult::Success)
 		{
 			break;
@@ -16,12 +16,12 @@ void NamedPipeInstance::OnClientRequest()
 		Log("NamedPipeInstance.OnClientRequest.Request", Severity::Spam)
 			<< R"(Received request from client. { "request": ")" << readResult.second << R"(" })";
 
-		auto response = m_onClientRequestCallback(readResult.second);
+		auto response = LogExecutionTime("NamedPipeInstance.OnClientRequest", m_onClientRequestCallback(readResult.second));
 
 		Log("NamedPipeInstance.OnClientRequest.Response", Severity::Spam)
 			<< R"(Sending response to client. { "response": ")" << response << R"(" })";
 
-		auto writeResult = WriteResponse(response);
+		auto writeResult = LogExecutionTime("NamedPipeInstance.OnClientRequest", WriteResponse(response));
 		if (writeResult != IoResult::Success)
 		{
 			break;

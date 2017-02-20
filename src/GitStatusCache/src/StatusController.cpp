@@ -102,13 +102,13 @@ std::string StatusController::GetStatus(const rapidjson::Document& document, con
 	}
 	auto path = std::string(document["Path"].GetString());
 
-	auto repositoryPath = m_git.DiscoverRepository(path);
+	auto repositoryPath = LogExecutionTime("StatusController.GetStatus", m_git.DiscoverRepository(path));
 	if (!std::get<0>(repositoryPath))
 	{
 		return CreateErrorResponse(request, "Requested 'Path' is not part of a git repository.");
 	}
 
-	auto status = m_cache.GetStatus(std::get<1>(repositoryPath));
+	auto status = LogExecutionTime("StatusController.GetStatus", m_cache.GetStatus(std::get<1>(repositoryPath)));
 	if (!std::get<0>(status))
 	{
 		return CreateErrorResponse(request, "Failed to retrieve status of git repository at provided 'Path'.");
@@ -277,7 +277,7 @@ std::string StatusController::HandleRequest(const std::string& request)
 	if (boost::iequals(action, "GetStatus"))
 	{
 		boost::timer::cpu_timer timer;
-		auto result = GetStatus(document, request);
+		auto result = LogExecutionTime("StatusController.HandleRequest", GetStatus(document, request));
 		RecordGetStatusTime(timer.elapsed().wall);
 		return result;
 	}
