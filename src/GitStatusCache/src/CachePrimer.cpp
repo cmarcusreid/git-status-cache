@@ -42,7 +42,7 @@ CachePrimer::~CachePrimer()
 
 void CachePrimer::OnPrimingTimerExpiration(boost::system::error_code errorCode)
 {
-	if (errorCode != 0)
+	if (errorCode.value() != 0)
 		return;
 
 	std::unordered_set<std::string> repositoriesToPrime;

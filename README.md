@@ -211,7 +211,7 @@ CMake is required to build. See libgit2 [build instructions](https://libgit2.git
 	cd .\ext\libgit2
 	mkdir build
 	cd build
-	cmake .. -DBUILD_SHARED_LIBS=OFF -DSTATIC_CRT=ON -DTHREADSAFE=ON
+	cmake .. -DBUILD_SHARED_LIBS=OFF -DSTATIC_CRT=ON -DTHREADSAFE=ON -DBUILD_CLAR=OFF
 	cmake --build . --config Debug
 	cmake --build . --config Release
 

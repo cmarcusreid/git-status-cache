@@ -2,6 +2,8 @@
 #include "Git.h"
 #include "StringConverters.h"
 #include <boost/filesystem/operations.hpp>
+#include <iostream>
+#include <fstream>
 
 std::string ReadFirstLineInFile(const boost::filesystem::path& path)
 {
