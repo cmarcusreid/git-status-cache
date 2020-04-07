@@ -1,6 +1,7 @@
 #pragma once
 #include "Cache.h"
 #include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/io_service.hpp>
 
 /**
 * Actively updates invalidated cache entries to reduce cache misses on client requests.
