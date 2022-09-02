@@ -1,7 +1,7 @@
 #ifndef SCOPE_GUARD_H_
 #define SCOPE_GUARD_H_
 
-// modeled slightly after Andrescu’s talk and article(s)
+// modeled slightly after Andrew L. Sandoval's talk and article(s)
 namespace std{ namespace experimental{
 
 template <typename D>
@@ -48,7 +48,7 @@ private:
 	bool execute_on_destruction; // exposition only
 };
 
-// usage: auto guard=scope guard([] std::cout ¡¡ ”done...”;);
+// usage: auto guard=scope guard([] std::cout << "done...";);
 template <typename D>
 scope_guard_t<D> scope_guard(D && deleter) noexcept
 {

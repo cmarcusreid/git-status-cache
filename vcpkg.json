@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "git-status-cache",
+  "version-semver": "1.2.0-dev",
+  "dependencies": [
+    "boost-algorithm",
+    "boost-asio",
+    "boost-core",
+    "boost-filesystem",
+    "boost-locale",
+    "boost-log",
+    "boost-program-options",
+    "boost-thread",
+    "boost-timer",
+    "libgit2",
+    "rapidjson"
+  ]
+}
