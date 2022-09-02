@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.Build.Traversal">
+  <ItemGroup>
+    <ProjectReference Include="src/GitStatusCache/ide/GitStatusCache.vcxproj" />
+    <ProjectReference Include="ext/ReadDirectoryChanges/ide/ReadDirectoryChangesLib.vcxproj" />
+  </ItemGroup>
+</Project>

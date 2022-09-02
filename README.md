@@ -183,41 +183,51 @@ Costs were gathered using timestamps from posh-git's debug output. Timings for p
 
 ## Build ##
 
-Build through Visual Studio using the [solution](ide/GitStatusCache.sln) after configuring required dependencies. 
+Need Visual Studio 2022 or higher version.
 
-### Build dependencies ###
+Need to bootstrap vcpkg before build anything.
 
-#### CMake ####
+```bash
+cd vcpkg
+./bootstrap-vcpkg.bat
+cd ..
+```
 
-Project includes libgit2 as a submodule. Initial build of libgit2 requires [CMake](http://www.cmake.org/ "CMake").
+Then you can build with either Visual Studio 2022 DevEnv or just MSBuild.
 
-#### Boost ####
+```bash
+start ide/GitStatusCache.sln
+```
 
-Visual Studio project requires BOOST_ROOT variable be set to the location of Boost's root directory. Boost can be built using the *Simplified Build From Source* instructions on Boost's [getting started page](http://www.boost.org/doc/libs/1_58_0/more/getting_started/windows.html "getting started page"):
+Or
 
-> If you wish to build from source with Visual C++, you can use a simple build procedure described in this section. Open the command prompt and change your current directory to the Boost root directory. Then, type the following commands:
->
-    bootstrap
-    .\b2 runtime-link=static
+```bash
+msbuild /p:Configuration=Debug /p:Platform=x64
+# or for release profile
+msbuild /p:Configuration=Release /p:Platform=x64
+```
 
-#### libgit2 ####
+You can found the artifact in `src/GitStatusCache/ide/x64/(Debug|Release)/GitStatusCache.exe`.
 
-libgit2 is included as a submodule. To pull locally:
+Verify the dependencies are linked statically:
 
-	git submodule update --init --recursive
+```bash
+dumpbin /dependents .\src\GitStatusCache\ide\x64\Debug\GitStatusCache.exe
+```
 
-CMake is required to build. See libgit2 [build instructions](https://libgit2.github.com/docs/guides/build-and-link/ "build instructions") for details. Use the following options to generate Visual Studio project and perform initial build: 
+It would produce as following:
 
-	cd .\ext\libgit2
-	mkdir build
-	cd build
-	cmake .. -DBUILD_SHARED_LIBS=OFF -DSTATIC_CRT=ON -DTHREADSAFE=ON -DBUILD_CLAR=OFF
-	cmake --build . --config Debug
-	cmake --build . --config Release
+```
+Image has the following dependencies:
 
-#### rapidjson ####
-
-[rapidjson](https://github.com/miloyip/rapidjson/ "rapidjson") headers are included as a submodule. To pull locally:
-
-	git submodule update --init --recursive
-
+  KERNEL32.dll
+  USER32.dll
+  SHELL32.dll
+  SHLWAPI.dll
+  WS2_32.dll
+  CRYPT32.dll
+  RPCRT4.dll
+  WINHTTP.dll
+  ADVAPI32.dll
+  ole32.dll
+```
