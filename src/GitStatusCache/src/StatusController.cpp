@@ -94,7 +94,7 @@ void StatusController::RecordGetStatusTime(uint64_t nanosecondsInGetStatus)
 	m_maxNanosecondsInGetStatus = (std::max)(nanosecondsInGetStatus, m_maxNanosecondsInGetStatus);
 }
 
-std::string StatusController::GetStatus(const rapidjson::Document& document, const std::string& request)
+std::string StatusController::GetStatus(const rapidjson::Document& document, const std::string& request, bool concise)
 {
 	if (!document.HasMember("Path") || !document["Path"].IsString())
 	{
@@ -132,43 +132,64 @@ std::string StatusController::GetStatus(const rapidjson::Document& document, con
 	AddUintToJson(writer, "AheadBy", statusToReport.AheadBy);
 	AddUintToJson(writer, "BehindBy", statusToReport.BehindBy);
 
-	AddArrayToJson(writer, "IndexAdded", statusToReport.IndexAdded);
-	AddArrayToJson(writer, "IndexModified", statusToReport.IndexModified);
-	AddArrayToJson(writer, "IndexDeleted", statusToReport.IndexDeleted);
-	AddArrayToJson(writer, "IndexTypeChange", statusToReport.IndexTypeChange);
-	writer.String("IndexRenamed");
-	writer.StartArray();
-	for (const auto& value : statusToReport.IndexRenamed)
-	{
-		writer.StartObject();
-		writer.String("Old");
-		writer.String(value.first.c_str());
-		writer.String("New");
-		writer.String(value.second.c_str());
-		writer.EndObject();
-	}
-	writer.EndArray();
+    if (concise)
+    {
+        AddUintToJson(writer, "IndexAdded", statusToReport.IndexAdded.size());
+        AddUintToJson(writer, "IndexModified", statusToReport.IndexModified.size());
+        AddUintToJson(writer, "IndexDeleted", statusToReport.IndexDeleted.size());
+        AddUintToJson(writer, "IndexTypeChange", statusToReport.IndexTypeChange.size());
+        AddUintToJson(writer, "IndexRenamed", statusToReport.IndexRenamed.size());
 
-	AddArrayToJson(writer, "WorkingAdded", statusToReport.WorkingAdded);
-	AddArrayToJson(writer, "WorkingModified", statusToReport.WorkingModified);
-	AddArrayToJson(writer, "WorkingDeleted", statusToReport.WorkingDeleted);
-	AddArrayToJson(writer, "WorkingTypeChange", statusToReport.WorkingTypeChange);
-	writer.String("WorkingRenamed");
-	writer.StartArray();
-	for (const auto& value : statusToReport.WorkingRenamed)
-	{
-		writer.StartObject();
-		writer.String("Old");
-		writer.String(value.first.c_str());
-		writer.String("New");
-		writer.String(value.second.c_str());
-		writer.EndObject();
-	}
-	writer.EndArray();
-	AddArrayToJson(writer, "WorkingUnreadable", statusToReport.WorkingUnreadable);
+        AddUintToJson(writer, "WorkingAdded", statusToReport.WorkingAdded.size());
+        AddUintToJson(writer, "WorkingModified", statusToReport.WorkingModified.size());
+        AddUintToJson(writer, "WorkingDeleted", statusToReport.WorkingDeleted.size());
+        AddUintToJson(writer, "WorkingTypeChange", statusToReport.WorkingTypeChange.size());
+        AddUintToJson(writer, "WorkingRenamed", statusToReport.WorkingRenamed.size());
+        AddUintToJson(writer, "WorkingUnreadable", statusToReport.WorkingUnreadable.size());
 
-	AddArrayToJson(writer, "Ignored", statusToReport.Ignored);
-	AddArrayToJson(writer, "Conflicted", statusToReport.Conflicted);
+        AddUintToJson(writer, "Ignored", statusToReport.Ignored.size());
+        AddUintToJson(writer, "Conflicted", statusToReport.Conflicted.size());
+    }
+    else
+    {
+        AddArrayToJson(writer, "IndexAdded", statusToReport.IndexAdded);
+        AddArrayToJson(writer, "IndexModified", statusToReport.IndexModified);
+        AddArrayToJson(writer, "IndexDeleted", statusToReport.IndexDeleted);
+        AddArrayToJson(writer, "IndexTypeChange", statusToReport.IndexTypeChange);
+        writer.String("IndexRenamed");
+        writer.StartArray();
+        for (const auto& value : statusToReport.IndexRenamed)
+        {
+            writer.StartObject();
+            writer.String("Old");
+            writer.String(value.first.c_str());
+            writer.String("New");
+            writer.String(value.second.c_str());
+            writer.EndObject();
+        }
+        writer.EndArray();
+
+        AddArrayToJson(writer, "WorkingAdded", statusToReport.WorkingAdded);
+        AddArrayToJson(writer, "WorkingModified", statusToReport.WorkingModified);
+        AddArrayToJson(writer, "WorkingDeleted", statusToReport.WorkingDeleted);
+        AddArrayToJson(writer, "WorkingTypeChange", statusToReport.WorkingTypeChange);
+        writer.String("WorkingRenamed");
+        writer.StartArray();
+        for (const auto& value : statusToReport.WorkingRenamed)
+        {
+            writer.StartObject();
+            writer.String("Old");
+            writer.String(value.first.c_str());
+            writer.String("New");
+            writer.String(value.second.c_str());
+            writer.EndObject();
+        }
+        writer.EndArray();
+        AddArrayToJson(writer, "WorkingUnreadable", statusToReport.WorkingUnreadable);
+
+        AddArrayToJson(writer, "Ignored", statusToReport.Ignored);
+        AddArrayToJson(writer, "Conflicted", statusToReport.Conflicted);
+    }
 
 	writer.String("Stashes");
 	writer.StartArray();
@@ -278,6 +299,14 @@ std::string StatusController::HandleRequest(const std::string& request)
 	{
 		boost::timer::cpu_timer timer;
 		auto result = GetStatus(document, request);
+		RecordGetStatusTime(timer.elapsed().wall);
+		return result;
+	}
+
+	if (boost::iequals(action, "GetConciseStatus"))
+	{
+		boost::timer::cpu_timer timer;
+		auto result = GetStatus(document, request, true);
 		RecordGetStatusTime(timer.elapsed().wall);
 		return result;
 	}

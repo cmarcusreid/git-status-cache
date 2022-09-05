@@ -76,7 +76,7 @@ private:
 	/**
 	* Retrieves current git status.
 	*/
-	std::string GetStatus(const rapidjson::Document& document, const std::string& request);
+	std::string GetStatus(const rapidjson::Document& document, const std::string& request, bool concise = false);
 
 	/**
 	* Retrieves information about cache's performance.
